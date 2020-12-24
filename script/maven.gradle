@@ -1,0 +1,1 @@
+apply from: forMaven.task == "bintrayUpload" ? "$rootDir/script/bintray.gradle" : "$rootDir/script/upload.gradle"

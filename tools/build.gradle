@@ -1,0 +1,4 @@
+// 添加依赖
+dependencies {
+    api "com.alibaba:fastjson:1.2.68"
+}

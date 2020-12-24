@@ -1,0 +1,84 @@
+// backup of [https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle]
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+if (project != rootProject) {
+    project.bintrayUpload.dependsOn("build")
+}
+project.bintrayUpload.dependsOn("generatePomFileForAexPublication")
+version = forMaven.version
+group = forMaven.group
+
+publishing {
+    publications {
+        aex(MavenPublication) {
+            groupId forMaven.group
+            artifactId forMaven.artifactId
+            version forMaven.version
+            if (project != rootProject) pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.implementation.allDependencies.each {
+                    // Ensure dependencies such as fileTree are not included in the pom.
+                    if (it.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+            //如果是Android项目,打包设置为aar
+            if (project.hasProperty("android")) {
+                pom.packaging = "aar"
+            }
+        }
+    }
+}
+
+bintray {
+    user = forMaven.user
+    key = forMaven.psw
+    configurations = ['archives']
+    publications = ['aex']
+    pkg {
+        repo = bintrayRepo//自己创建的仓库名字
+        name = forMaven.artifactId//上传到JCenter的名字,最终引用的名字 compile 'com.piano.demolib:1.0.0'
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ['Apache-2.0']
+        publish = true // 是否是公开项目，公开别人可以引用
+        version {
+            name = forMaven.name
+            desc = forMaven.name
+            released = new Date()
+            vcsTag = "v${forMaven.version}"
+        }
+    }
+}
+
+//设置上传文件
+if (forMaven.file != null) {
+    artifacts.archives forMaven.file
+} else if (project.hasProperty("android")) { // Android libraries
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.srcDirs
+    }
+    artifacts.archives sourcesJar
+} else if (project.hasProperty("java")) { // Java libraries
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    artifacts.archives sourcesJar
+}
+//↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+
+
+
+
+
+

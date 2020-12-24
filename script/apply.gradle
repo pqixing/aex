@@ -1,0 +1,14 @@
+//安装组件化模块的脚本
+repositories {
+    maven {
+        url uri("/Users/pqx/Documents/code/pqx/aex/repo")
+    }
+    maven {
+        url "http://maven.aliyun.com/nexus/content/groups/public"
+    }
+    google()
+    jcenter()
+}
+dependencies {
+    classpath 'com.pqixing.ex:module:1.0'
+}

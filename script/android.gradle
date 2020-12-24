@@ -1,0 +1,48 @@
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        qixing {
+            storeFile file("pqixing.jks")
+            storePassword "qx123456"
+            keyAlias "pqixing"
+            keyPassword "qx123456"
+        }
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    buildTypes {
+        debug{
+//            signingConfig signingConfigs.qixing
+        }
+        release {
+//            signingConfig signingConfigs.qixing
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+//    api 'com.github.bumptech.glide:glide:4.11.0'
+//    api "androidx.recyclerview:recyclerview:1.1.0"
+//    api 'com.alibaba:fastjson:1.2.68'
+
+}

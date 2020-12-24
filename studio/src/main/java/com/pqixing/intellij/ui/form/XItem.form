@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.pqixing.intellij.ui.weight.XItem">
+  <grid id="27dc6" binding="jItemRoot" layout-manager="BorderLayout" hgap="5" vgap="0">
+    <constraints>
+      <xy x="20" y="20" width="710" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="etched"/>
+    <children>
+      <grid id="6e346" layout-manager="BorderLayout" hgap="5" vgap="0">
+        <constraints border-constraint="West"/>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="c9f94" class="javax.swing.JCheckBox" binding="cbSelect">
+            <constraints border-constraint="West"/>
+            <properties>
+              <hideActionText value="false"/>
+              <selected value="false"/>
+              <text value=""/>
+            </properties>
+          </component>
+          <component id="a159a" class="javax.swing.JLabel" binding="tvTitle">
+            <constraints border-constraint="Center"/>
+            <properties>
+              <alignmentX value="0.5"/>
+              <horizontalAlignment value="2"/>
+              <horizontalTextPosition value="11"/>
+              <iconTextGap value="4"/>
+              <preferredSize width="160" height="0"/>
+              <text value=""/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <component id="124f8" class="javax.swing.JLabel" binding="tvContent">
+        <constraints border-constraint="Center"/>
+        <properties>
+          <autoscrolls value="false"/>
+          <horizontalAlignment value="4"/>
+          <preferredSize width="32" height="30"/>
+          <text value=""/>
+        </properties>
+      </component>
+      <component id="b4b40" class="javax.swing.JLabel" binding="tvTag">
+        <constraints border-constraint="East"/>
+        <properties>
+          <alignmentX value="0.5"/>
+          <horizontalAlignment value="4"/>
+          <preferredSize width="160" height="30"/>
+          <text value=""/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+</form>

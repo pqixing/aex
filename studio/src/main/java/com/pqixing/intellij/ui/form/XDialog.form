@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.pqixing.intellij.ui.weight.XDialog">
+  <scrollpane id="80f95" binding="content">
+    <constraints>
+      <xy x="20" y="20" width="500" height="400"/>
+    </constraints>
+    <properties>
+      <preferredSize width="650" height="300"/>
+    </properties>
+    <border type="line" title="  Select: 0  ▼   "/>
+    <children>
+      <grid id="27dc6" binding="center" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+        <constraints/>
+        <properties/>
+        <border type="none"/>
+        <children/>
+      </grid>
+    </children>
+  </scrollpane>
+</form>

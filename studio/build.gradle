@@ -1,0 +1,22 @@
+apply plugin: "org.jetbrains.intellij"
+dependencies {
+    compile "com.alibaba:fastjson:1.2.68"
+}
+
+intellij {
+    pluginName 'aex'
+    version 'IC-2020.1'//设定依赖的版本
+//    localPath '/Applications/IntelliJCE.app' //当前依赖本地版本
+    plugins = ['android', 'git4idea', "java", "gradle"]
+    updateSinceUntilBuild false
+}
+runIde {
+    // Absolute path to installed target 3.5 Android Studio to use as IDE Development Instance
+    // The "Contents" directory is macOS specific.
+//    ideDirectory '/Applications/StudioAX.app/Contents'
+}
+publishPlugin {
+// Bintray
+    token gradle.hasProperty("jetbrains_token") ? gradle.jetbrains_token :""
+    channels 'stable'
+}
