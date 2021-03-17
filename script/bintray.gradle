@@ -7,8 +7,11 @@ if (project != rootProject) {
     project.bintrayUpload.dependsOn("build")
 }
 project.bintrayUpload.dependsOn("generatePomFileForAexPublication")
-version = forMaven.version
-group = forMaven.group
+//如果是当前要上传的项目,设置正确的group,否则不设置,避免exclude异常
+if (forMaven.toMaven) {
+    version = forMaven.version
+    group = forMaven.group
+}
 
 publishing {
     publications {

@@ -1,63 +1,61 @@
 //安装组件化模块的脚本
 apply plugin: "com.pqixing.aex"
-
-def aex_local = false
-
-//开始配置工程 @see module/src/main/java/com/pqixing/aex/XManifestEx.kt
 aex {
     //不适用分支进行maven仓库隔离
     usebr = false
     fallbacks(["dev", "main"])
-    config {
-        log = true
-    }
     git("pqixing") {
         url = "https://github.com/pqixing"
         user = "pqixing@163.com"
         psw = "input_you_psw"
-        group = "thirs"
+        group = "script/thirs"
+    }
+    types {
+        runs.clear()
     }
 
-    maven("bintray") {
-        url = "https://dl.bintray.com/pqixing86/aex"
-        user = "pqixing86"
+    maven("pqixing") {
+        url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+        user = "pqx"
         psw = "input_you_psw"
-        group = "com.pqixing.aex"
-        task = "bintrayUpload"
-        version = "1.0"
-    }
-    maven("local") {
-        url = "$rootDir.absolutePath/script/repo"
-        user = "pqixing86"
-        psw = "input_you_psw"
-        group = "com.pqixing.aex.local"
+        group = "io.github.pqixing"
         task = "uploadArchives"
+        anonymous = false
         version = "1.0"
     }
 
-    root("aex", maven(aex_local ? "local" : "bintray"), git("pqixing")) {
-        module("studio", "IDE 插件", "JAVA") {
-            api("tools")
-        }
-        module("module", "Gradle 插件", "JAVA") {
-            api("tools")
-        }
-        module("tools", "基础模块定义", "JAVA")
+    maven("local") {
+        url = "$rootDir.absolutePath/libs/repo"
+        user = "pqixing86"
+        psw = "input_you_psw"
+        group = "com.pqixing.local"
+        task = "uploadArchives"
+        version = "0.1"
     }
 
-    project("Common", "通用模块工程","common") {
-        module("leetcode", "刷题集合", "JAVA")
-        module("launch", "组件运行模块", "LIBRARY")
-//        module("space", "私有时候app助手", "APP")
-//        module("tv_home", "电视盒子助手", "APP")
+    root("aex_root", maven(aex_local ? "local" : "pqixing"), git("pqixing")) {
+        module("ide", "IDE 插件", "JAVA") {
+            api("tools")
+        }
+        module("aex", "Gradle 插件", "JAVA") {
+            api("tools")
+        }
+        module("tools", "基础模块定义", "JAVA") {
+            path = "libs/tools"
+        }
+        module("door", "启动页面", "LIBRARY") {
+            path = "libs/door"
+        }
     }
 }
 
 //设置插件环境
 buildscript {
-    repositories { maven { url 'https://dl.bintray.com/pqixing86/aex' } }
+    ext.aex_local = false
     repositories { maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' } }
-    dependencies { classpath 'com.pqixing.aex:module:1.0.15' }
+//    repositories { maven { url 'https://dl.bintray.com/pqixing86/aex' } }
+//    dependencies { classpath 'com.pqixing.aex:module:1.1.6' }
+//   dependencies { classpath 'io.github.pqixing:aex:1.0' }
     //依赖本地调试
-//    repositories { maven { url uri("$rootDir.absolutePath/script/repo") } }; dependencies { classpath "com.pqixing.aex.local:module:1.0.+" }
+    repositories { maven { url uri("$rootDir.absolutePath/libs/repo") } }; dependencies { classpath "com.pqixing.local:aex:+" }
 }

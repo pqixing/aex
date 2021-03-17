@@ -1,0 +1,69 @@
+<idea-plugin>
+    <id>com.pqixing.aex</id>
+    <name>AEX</name>
+    <version>1.1.0</version>
+    <vendor email="pqixing86@gmail.com" url="https://github.com/pqixing/aex">pqixing
+    </vendor>
+
+    <description>
+        <![CDATA[
+        <h2> Support for <b><a href="https://github.com/pqixing/aex">AEX</a></b></h2><br/>
+        <b>Provide ui operation for aex project</b> <br/>
+        <b>Features</b> <br/>
+        1. Smart manager code , automatic clone you need if used  <br/>
+        2. Quickly builder tool ,you can run library or application for one click  <br/>
+        3. Select and upload multi library to maven <br/>
+        4. Run git cmd for all project for once <br/>
+        5. Simple to open new aex project  <br/>
+        <p><b>More information ，See GitHub</b> <a href="https://github.com/pqixing/aex">https://github.com/pqixing/aex</a></p>
+     ]]>
+    </description>
+
+    <change-notes>
+        Support maven credentials
+        Add more description
+    </change-notes>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
+    <idea-version since-build="201"/>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>Git4Idea</depends>
+    <depends>org.jetbrains.android</depends>
+    <actions>
+
+        <group id="AEX" popup="true" text="AEX" class="com.pqixing.intellij.common.XGroup">
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+
+            <action id="AEX.XDebugAction" class="com.pqixing.intellij.actions.XDebugAction" text="Debug"/>
+            <separator/>
+            <action id="AEX.XImportAction" class="com.pqixing.intellij.actions.XImportAction" text="Import">
+                <keyboard-shortcut first-keystroke="ctrl alt I" keymap="$default"/>
+            </action>
+            <action id="AEX.BuilderAction" class="com.pqixing.intellij.actions.XBuilderAction" text="Builder">
+                <add-to-group group-id="ToolbarRunGroup" relative-to-action="DeviceAndSnapshotComboBox" anchor="after"/>
+            </action>
+
+            <separator/>
+            <action id="AEX.ToMaven" class="com.pqixing.intellij.actions.XToMavenAction" text="ToMaven"/>
+
+
+            <action id="AEX.SyncMavenAction"
+                    class="com.pqixing.intellij.actions.IndexRepoAction" text="Indexing"/>
+
+            <separator/>
+            <action id="AEX.XGitAction" class="com.pqixing.intellij.actions.XGitAction" text="Git Batch"/>
+            <action id="AEX.XProjectAction" class="com.pqixing.intellij.actions.XProjectAction" text="Open AEX">
+                <add-to-group group-id="WelcomeScreen.Configure" anchor="first"/>
+                <add-to-group group-id="FileMenu" anchor="first"/>
+            </action>
+        </group>
+    </actions>
+</idea-plugin>

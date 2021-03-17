@@ -1,6 +1,5 @@
 .DS_Store
 .gradle/
-gradle/
 .idea/
 gradlew
 gradlew.bat
@@ -8,4 +7,4 @@ build
 *.iml
 local.properties
 local.gradle
-common
+script/thirs
