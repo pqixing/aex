@@ -86,7 +86,8 @@ open class ToMavenTask : BaseTask() {
             forMaven.url,
             forMaven.group,
             forMaven.artifactId,
-            lastVersion
+            lastVersion,
+            maven.asCredentials()
         ).name
     }.getOrNull() == forMaven.name
 

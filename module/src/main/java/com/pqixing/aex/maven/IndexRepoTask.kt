@@ -81,15 +81,15 @@ open class IndexRepoTask : BaseTask() {
     private fun reloadVersion(branchs: MutableSet<String>, versions: HashMap<String, Int>) {
         branchs.add("")
         val modules = manifest.sorted().minus(manifest.root).mapNotNull { it as? ModuleEx }
-        set.println("Start Fetch :  branches = $branchs , modules=${modules.map{it.name}}")
+        set.println("Start Fetch :  branches = $branchs , modules=${modules.map { it.name }}")
         for (b in branchs) for (m in modules) {
             val maven = m.project.maven
             val url = TextUtils.append(arrayOf(maven.url, maven.group.replace(".", "/"), b.aexEncode(), m.name, XKeys.XML_META))
-            val metaStr = XHelper.readUrlTxt(url)
-            set.println("$url -> ${metaStr.length}")
+            val metaStr = XHelper.readUrlTxt(url, maven.asCredentials())
+//            set.println("$url -> ${metaStr.length}")
             if (metaStr.isNotEmpty()) kotlin.runCatching {
                 val meta = XHelper.parseMetadata(metaStr)
-                set.println("request -> $url -> ${meta.versions}")
+                set.println("find ${meta.versions} : $url")
                 addVersion(versions, meta.groupId.trim(), meta.artifactId.trim(), meta.versions)
             }
         }

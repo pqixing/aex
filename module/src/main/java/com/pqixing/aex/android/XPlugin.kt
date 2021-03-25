@@ -1,6 +1,6 @@
 package com.pqixing.aex.android
 
-import com.pqixing.XKeys
+import com.pqixing.*
 import com.pqixing.aex.android.tasks.ApkBuildResult
 import com.pqixing.aex.android.tasks.BaseTask
 import com.pqixing.aex.maven.IndexRepoTask
@@ -9,9 +9,6 @@ import com.pqixing.aex.model.ModuleEx
 import com.pqixing.aex.setting.XSetting
 import com.pqixing.aex.utils.register
 import com.pqixing.aex.utils.setting
-import com.pqixing.base64Encode
-import com.pqixing.hash
-import com.pqixing.pure
 import com.pqixing.model.BrOpts
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.tools.FileUtils
@@ -92,9 +89,16 @@ open class XPlugin : Plugin<Project> {
 
     private fun forRepo(pro: Project) {
         val repos = pro.repositories
+        val dps = module.dps()
+        val depends = module.sorted().filter { dps.contains(it.name) }.map { it.project.maven }.distinctBy { it.url }
         //所有依赖到的maven仓库,添加依赖
-        for (uri in module.sorted().map { it.project.maven.uri() }.toSet()) {
-            repos.maven { maven -> maven.url = uri }
+        for (dp in depends) repos.maven { maven ->
+            maven.url = dp.uri()
+            //如果不允许匿名访问,添加用户名和密码
+            if (!dp.anonymous) maven.credentials {
+                it.username = dp.user
+                it.password = dp.psw.real()
+            }
         }
     }
 

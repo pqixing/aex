@@ -3,6 +3,7 @@ package com.pqixing.aex.model
 import com.pqixing.aex.model.define.IManifestEx
 import com.pqixing.aex.setting.XSetting
 import com.pqixing.aex.utils.AEX.runClosure
+import com.pqixing.base64Encode
 import com.pqixing.envValue
 import com.pqixing.model.define.IGit
 import com.pqixing.model.define.IMaven
@@ -34,6 +35,7 @@ open class ManifestEx(dir: String) : ManifestX(dir), IManifestEx {
         maven.psw = from.psw
         maven.group = from.group
         maven.version = from.version
+        maven.anonymous = from.anonymous
 
         return runClosure(maven, closure)
     }
@@ -77,7 +79,8 @@ open class ManifestEx(dir: String) : ManifestX(dir), IManifestEx {
     override fun project(name: String, closure: Closure<*>?): ProjectEx = project(name, "", closure)
     override fun project(name: String, desc: String, closure: Closure<*>?): ProjectEx = project(name, desc, name, closure)
 
-    override fun project(name: String, desc: String, url: String, closure: Closure<*>?): ProjectEx = project(name, desc, url, root.project.maven, root.project.git, closure)
+    override fun project(name: String, desc: String, url: String, closure: Closure<*>?): ProjectEx =
+        project(name, desc, url, root.project.maven, root.project.git, closure)
 
     override fun project(name: String, maven: IMaven, git: IGit, closure: Closure<*>?): ProjectEx = project(name, "", name, maven, git, closure)
 
@@ -118,7 +121,16 @@ open class ManifestEx(dir: String) : ManifestX(dir), IManifestEx {
     fun afterEvaluated(set: XSetting) {
         for (field in config.javaClass.declaredFields) readEnvValue(field, config)
         projects.map { it.modules }.flatten().filter { it.version.isEmpty() }
-                .forEach { it.version = it.project.maven.version }
+            .forEach { it.version = it.project.maven.version }
+
+        mavens.filter { !it.psw.startsWith("sk:") }.forEach {
+            set.println("Warming::${it.name} suggest set password ${it.psw} -> ${"sk:" + it.psw.base64Encode().reversed()}")
+        }
+
+        gits.filter { !it.psw.startsWith("sk:") }.forEach {
+            set.println("Warming::${it.name} suggest set password ${it.psw} -> ${"sk:" + it.psw.base64Encode().reversed()}")
+        }
+
     }
 
     private fun readEnvValue(field: Field, target: Any) {

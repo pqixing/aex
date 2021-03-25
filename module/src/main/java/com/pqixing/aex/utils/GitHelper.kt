@@ -1,47 +1,22 @@
 package com.pqixing.aex.utils
 
 import com.jcraft.jsch.Session
+import com.pqixing.aex.setting.XSetting
 import com.pqixing.base64Decode
 import com.pqixing.base64Encode
 import com.pqixing.hash
-import com.pqixing.aex.setting.XSetting
-import com.pqixing.tools.FileUtils
 import com.pqixing.model.impl.ModuleX
-import org.eclipse.jgit.api.CreateBranchCommand
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.GitCommand
-import org.eclipse.jgit.api.ListBranchCommand
-import org.eclipse.jgit.api.TransportConfigCallback
+import com.pqixing.real
+import com.pqixing.tools.FileUtils
+import org.eclipse.jgit.api.*
 import org.eclipse.jgit.lib.Ref
-import org.eclipse.jgit.transport.JschConfigSessionFactory
-import org.eclipse.jgit.transport.OpenSshConfig
-import org.eclipse.jgit.transport.SshSessionFactory
-import org.eclipse.jgit.transport.SshTransport
-import org.eclipse.jgit.transport.Transport
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import org.eclipse.jgit.transport.*
 import java.io.File
 import java.text.SimpleDateFormat
 
 class GitHelper(val set: XSetting) {
 
-
-    fun getPsw(value: String): String {
-        if (value.startsWith("sk:")) return value.substring(3).reversed().base64Decode()
-        if (value.isNotEmpty()) {
-            set.println("Warming::password suggest $value -> ${"sk:" + value.base64Encode().reversed()}")
-        }
-        return value
-    }
-
     val dateVersion = SimpleDateFormat("yyyyMMddHHmmss")
-
-    fun getGroupId(groupId: String, branch: String?, useBranch: Boolean = true): String {
-        if (!useBranch || branch == null) {
-            return groupId
-        }
-        return groupId + "." + branch.hash()
-    }
-
 
     fun open(file: File?): Git? = kotlin.runCatching { Git.open(file) }.getOrNull()
 
@@ -54,7 +29,7 @@ class GitHelper(val set: XSetting) {
         set.println("JGIT start clone : $url")
         val git: Git? = Git.cloneRepository().setURI(url).setDirectory(gitDir)
             .setTransportConfigCallback(transportConfigCallback)
-            .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, getPsw(gitInfo.psw)))
+            .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, gitInfo.psw.real()))
             .setProgressMonitor(PercentProgress(set))
             .exe("clone $url ${gitDir.name} && cd ${gitDir.name}", gitDir.parentFile) ?: open(gitDir)
 
@@ -122,7 +97,7 @@ class GitHelper(val set: XSetting) {
             val gitInfo = module.project.git
             val call = git.pull()
                 .setTransportConfigCallback(transportConfigCallback)
-                .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, getPsw(gitInfo.psw)))
+                .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, gitInfo.psw.real()))
                 .exe("pull")
             val isSuccessful = call?.isSuccessful ?: false
             set.println(
@@ -172,12 +147,12 @@ class GitHelper(val set: XSetting) {
     /**
      * 检查git是否clean状态
      */
-    fun checkIfClean(git: Git?, path: String? = null): Boolean  {
-        git?:return true
+    fun checkIfClean(git: Git?, path: String? = null): Boolean {
+        git ?: return true
         val unClean = mutableSetOf<String>()
         val call = git.status().apply { if (path != null) addPath(path) }.call()
-            unClean+=call?.untracked?: emptySet()
-            unClean+=call?.uncommittedChanges?: emptySet()
+        unClean += call?.untracked ?: emptySet()
+        unClean += call?.uncommittedChanges ?: emptySet()
         set.println("${git.repository.directory.parentFile.name} -> checkIfClean :untracked -> $unClean")
 
         return unClean.isEmpty()

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON
 import com.pqixing.codec.AexURLDecoder
 import com.pqixing.codec.AexURLEncoder
 import com.pqixing.codec.digest.DigestUtils
+import com.pqixing.model.BasicCredentials
 import com.pqixing.model.Metadata
 import com.pqixing.model.Pom
 import com.pqixing.model.define.IMaven
@@ -13,6 +14,7 @@ import com.pqixing.tools.TextUtils
 import org.xml.sax.Attributes
 import org.xml.sax.helpers.DefaultHandler
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.InputStream
 import java.net.URL
 import java.util.*
@@ -32,6 +34,8 @@ fun String.envValue(): String? = try {
 val chars: List<Char> = ('0'..'9') + ('a'..'z') + ('A'..'Z')
 fun String.aexEncode() = AexURLEncoder.encode(this, "utf-8")
 fun String.aexDecode() = AexURLDecoder.decode(this, "utf-8")
+
+fun String.real() = if (this.startsWith("sk:")) this.substring(3).reversed().base64Decode() else this
 
 fun String.base64Encode() =
     String(Base64.getEncoder().encode(this.toByteArray(Charsets.UTF_8)), Charsets.UTF_8).replace("=", "")//把末尾的等号去掉,不影响解码
@@ -140,22 +144,40 @@ object XHelper {
     }
 
     /**
-     *
+     *读取url的文本
      */
-    fun readUrlTxt(url: String) = kotlin.runCatching {
-        if (url.startsWith("http")) URL(url).readText() else FileUtils.readText(File(url))
-    }.getOrNull() ?: ""
+    fun readUrlTxt(url: String, credentials: BasicCredentials? = null) =
+        openStream(url, credentials)?.use { it.readBytes().toString(Charsets.UTF_8) } ?: ""
 
-    fun urlToFile(url: String, file: File) {
+    fun urlToFile(url: String, file: File, credentials: BasicCredentials? = null) {
         kotlin.runCatching {
             if (!file.parentFile.exists()) {
                 file.parentFile.mkdirs()
             }
-            val ins = if (url.startsWith("http")) URL(url).openStream() else File(url).inputStream()
-            FileUtils.copy(ins, file.outputStream())
+            val ins = openStream(url, credentials)
+            if (ins != null) {
+                FileUtils.copy(ins, file.outputStream())
+            }
         }
     }
 
+    @JvmStatic
+    fun openStream(url: String, credentials: BasicCredentials? = null): InputStream? {
+        kotlin.runCatching {
+            //如果不是url地址,直接返回文件
+            if (!url.startsWith("http")) return File(url).inputStream()
+
+            val conn = URL(url).openConnection()
+            //账号密码不为空,添加密码支持
+            if (credentials?.isVail() == true) {
+                conn.setRequestProperty("Authorization", credentials.credentials())
+            }
+            return conn.getInputStream()
+        }.onFailure {
+            if (it is FileNotFoundException) println("${it.javaClass.name} : $url") else it.printStackTrace()
+        }
+        return null
+    }
 
     fun topSort(sources: Collection<TopNode>): List<String> {
         sources.forEach { it.degree = 0 }
@@ -209,7 +231,7 @@ object XHelper {
         val cacheFile = File(baseDir, TextUtils.append(arrayOf("build/meta/cache/", (maven.url + maven.group + name).hash(), XKeys.XML_META)))
         if (forceLoad || !repoMetaFile.exists()) {
             val metaUrl = TextUtils.append(arrayOf(maven.url, maven.group.replace(".", "/"), name, XKeys.XML_META))
-            urlToFile(metaUrl, repoMetaFile)
+            urlToFile(metaUrl, repoMetaFile, maven.asCredentials())
             FileUtils.copy(repoMetaFile, cacheFile)
         }
         return repoMetaFile
@@ -225,7 +247,10 @@ object XHelper {
         val cacheFile = File(baseDir, TextUtils.append(arrayOf("build/meta/cache/", (maven.url + maven.group + name).hash(), XKeys.XML_META)))
         //如果比repo meta文件更旧,或者超过10分钟没更新,重新从网络更新
         if (cacheFile.length() <= repoMetaFile.length() && (forceLoad || System.currentTimeMillis() - cacheFile.lastModified() > 10 * 60 * 1000)) {
-            urlToFile(TextUtils.append(arrayOf(maven.url, maven.group.replace(".", "/"), name, XKeys.XML_META)), cacheFile)
+            urlToFile(
+                TextUtils.append(arrayOf(maven.url, maven.group.replace(".", "/"), name, XKeys.XML_META)),
+                cacheFile, maven.asCredentials()
+            )
         }
         return cacheFile.length() > repoMetaFile.length()
     }

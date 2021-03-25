@@ -5,11 +5,11 @@ import com.pqixing.XKeys
 import com.pqixing.aex.setting.XSetting
 import com.pqixing.base64Decode
 import com.pqixing.hash
+import com.pqixing.model.BasicCredentials
 import com.pqixing.model.Pom
 import com.pqixing.tools.FileUtils
 import com.pqixing.tools.TextUtils
 import java.io.File
-import java.net.URL
 
 class VersionManager(val set: XSetting) {
     val manifest = set.manifest
@@ -32,8 +32,6 @@ class VersionManager(val set: XSetting) {
         loadVersionFile(manifest.config.sync || set.gradle.startParameter.taskNames.find { it.contains(XKeys.TASK_TO_MAVEN) } != null)
     }
 
-    fun allVersions() = curVersions.toMap()
-
     fun loadVersionFile(reload: Boolean) {
         //从网络拉取
         val pomFile = XHelper.reloadRepoMetaFile(reload, manifest.dir, name, maven)
@@ -50,6 +48,8 @@ class VersionManager(val set: XSetting) {
 
         curVersions.clear()
         compileVersion.clear()
+
+        val credentials = maven.asCredentials()
         val hash = manifest.branch.hash()
         var tag: VersionModel? = null
         var sync: VersionModel? = null
@@ -60,12 +60,12 @@ class VersionManager(val set: XSetting) {
             when {
                 version.startsWith("tag.") -> {
                     if (hash == version.substringAfterLast(".")) {
-                        tag = VersionModel().setUrl(file, url)
+                        tag = VersionModel().setUrl(file, url, credentials)
                     }
                 }
                 version.startsWith("sync.") -> {
                     curVersions.clear()
-                    sync = VersionModel().setUrl(file, url)
+                    sync = VersionModel().setUrl(file, url, credentials)
                 }
                 version.startsWith("log.") -> {
                     val spilt = version.substringAfterLast(".").base64Decode().split("=")
@@ -88,15 +88,13 @@ class VersionManager(val set: XSetting) {
         //添加设定的目标版本号文件
         val targetUrl = manifest.config.mapping
         if (targetUrl.isNotEmpty()) {
-            val target = VersionModel().setUrl(File(pomsDir, targetUrl.hash() + ".txt"), targetUrl)
+            val target = VersionModel().setUrl(File(pomsDir, targetUrl.hash() + ".txt"), targetUrl, credentials)
             compileVersion.putAll(target.check())
         }
 
-        val curFile = File(pomsDir, "current.properties")
-        val compileFile = File(pomsDir, "compiles.properties")
-        FileUtils.writeProperties(curFile, curVersions)
-        FileUtils.writeProperties(compileFile, compileVersion)
-        set.println("Current: ${curFile.absolutePath} ; \nCompiles: ${compileFile.absolutePath}")
+        FileUtils.writeProperties(File(pomsDir, "current.properties"), curVersions)
+        FileUtils.writeProperties(File(pomsDir, "compiles.properties"), compileVersion)
+        set.println("write [ current.properties , compiles.properties ] -> ${pomsDir.absolutePath}")
     }
 
     //pom对象,在内存中缓存一份,防止频繁读取
@@ -111,7 +109,7 @@ class VersionManager(val set: XSetting) {
     /**
      * 获取仓库aar中，exclude的传递
      */
-    fun getPom(mavenUrl: String, groupId: String, module: String, version: String): Pom {
+    fun getPom(mavenUrl: String, groupId: String, module: String, version: String, credentials: BasicCredentials?): Pom {
         val pomUrl =
             TextUtils.append(arrayOf(mavenUrl, groupId.replace(".", "/"), module, version, "$module-$version.pom"))
 
@@ -123,11 +121,11 @@ class VersionManager(val set: XSetting) {
         var pom = pomCache[pomKey]
         if (pom != null) return pom
 //
-        val pomDir = File(set.gradle.gradleHomeDir, "pomCache")
+        val pomDir = File(set.gradle.gradleUserHomeDir, "cache/pomCache")
         val pomFile = File(pomDir, pomKey)
         pom = if (pomFile.exists()) XHelper.parsePomExclude(FileUtils.readText(pomFile) ?: "")
         else {
-            val ponTxt = URL(pomUrl).readText()
+            val ponTxt = XHelper.readUrlTxt(pomUrl, credentials)
             FileUtils.writeText(pomFile, ponTxt)
             XHelper.parsePomExclude(ponTxt)
         }
@@ -158,9 +156,11 @@ class VersionManager(val set: XSetting) {
 class VersionModel : HashMap<String, Int>() {
     private var file: File? = null
     private var url: String = ""
-    fun setUrl(file: File, url: String): VersionModel {
+    private var credentials: BasicCredentials? = null
+    fun setUrl(file: File, url: String, credentials: BasicCredentials? = null): VersionModel {
         this.file = file
         this.url = url
+        this.credentials = credentials
         return this
     }
 
@@ -184,7 +184,7 @@ class VersionModel : HashMap<String, Int>() {
         val f = file ?: return this
         if (!f.exists() && url.isNotEmpty()) {
             //下载文件
-            XHelper.urlToFile(url, f)
+            XHelper.urlToFile(url, f, credentials)
         }
         if (f.exists()) {
             this += FileUtils.readProperties(f)

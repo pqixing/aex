@@ -20,7 +20,7 @@
     </description>
 
     <change-notes>
-        Add components change listener
+        Support maven credentials
         Add more description
     </change-notes>
 

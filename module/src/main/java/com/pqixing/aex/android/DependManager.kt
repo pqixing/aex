@@ -107,7 +107,7 @@ class DependManager(var set: XSetting, val module: ModuleEx) {
             val c = " ;force = true ;".takeIf { version == v } ?: ""
             includes += "${getScope("", dpc.scope)} ('${groupId}:${dpc.name}:${v}') " +
                     "{ ${excludeStr(excludes = dpc.excludes)} $c }"
-            excludes.addAll(set.vm.getPom(module.project.maven.url, groupId, dpc.name, v).allExclude)
+            excludes.addAll(set.vm.getPom(module.project.maven.url, groupId, dpc.name, v,module.project.maven.asCredentials()).allExclude)
             compile = true
         }
         return compile

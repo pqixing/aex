@@ -8,6 +8,7 @@ import com.pqixing.aex.model.ModuleEx
 import com.pqixing.aex.model.ProjectEx
 import com.pqixing.model.define.IMaven
 import com.pqixing.model.impl.ManifestX
+import com.pqixing.real
 import com.pqixing.tools.FileUtils
 import org.eclipse.jgit.api.Git
 import org.gradle.api.Project
@@ -135,8 +136,7 @@ class ImportScript(val manifest: ManifestX, val set: XSetting) {
         }
         val last = command.call().firstOrNull()
         val m = module.project.maven
-        val forMmaven =
-                m.ex(module.name, version = "", group = module.group(), psw = set.gitHelper.getPsw(m.psw))
+        val forMmaven = m.ex(module.name, version = "", group = module.group(), psw = m.psw.real())
         module.localEx = LocalEx(git, git.repository.branch, forMmaven, DependManager(set, module), last)
 
         if (module.localEx().branch != manifest.branch && manifest.usebr) {
@@ -144,13 +144,15 @@ class ImportScript(val manifest: ManifestX, val set: XSetting) {
         }
     }
 
-    private fun IMaven.ex(name: String = this.name,
-                          url: String = this.url,
-                          user: String = this.user,
-                          psw: String = this.psw,
-                          group: String = this.group,
-                          version: String = this.version,
-                          task: String = this.task): MavenEx {
+    private fun IMaven.ex(
+        name: String = this.name,
+        url: String = this.url,
+        user: String = this.user,
+        psw: String = this.psw,
+        group: String = this.group,
+        version: String = this.version,
+        task: String = this.task
+    ): MavenEx {
         val ex = MavenEx("")
         ex.artifactId = name
         ex.url = url
