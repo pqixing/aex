@@ -9,52 +9,59 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="5873" layout-manager="GridLayoutManager" row-count="1" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="5873" layout-manager="GridLayoutManager" row-count="1" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints border-constraint="Center"/>
         <properties/>
         <border type="none"/>
         <children>
-          <component id="3ef6" class="javax.swing.JTextField" binding="tvSearch">
-            <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                <preferred-size width="150" height="-1"/>
-              </grid>
-            </constraints>
-            <properties>
-              <editable value="true"/>
-              <enabled value="true"/>
-              <toolTipText value="input key search,support fuzzy search"/>
-            </properties>
-          </component>
-          <component id="6842f" class="javax.swing.JButton" binding="btnMore">
-            <constraints>
-              <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false">
-                <preferred-size width="40" height="-1"/>
-                <maximum-size width="40" height="-1"/>
-              </grid>
-            </constraints>
-            <properties>
-              <font/>
-              <horizontalTextPosition value="0"/>
-              <icon value="general/moreTabs.png"/>
-              <label value=""/>
-              <text value=""/>
-              <toolTipText value="sync local mapping file from maven"/>
-            </properties>
-          </component>
           <component id="b7b5" class="javax.swing.JCheckBox" binding="cbLocal">
             <constraints>
-              <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="5" row-span="1" col-span="1" vsize-policy="7" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
+              <font size="14"/>
               <text value="Local"/>
               <toolTipText value="enable compile local project"/>
             </properties>
           </component>
+          <component id="75d06" class="com.intellij.ui.SearchTextField" binding="tvSearch">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false">
+                <preferred-size width="230" height="-1"/>
+              </grid>
+            </constraints>
+            <properties/>
+          </component>
+          <hspacer id="185e7">
+            <constraints>
+              <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+            </constraints>
+          </hspacer>
+          <component id="1b6ef" class="javax.swing.JCheckBox" binding="cbLog">
+            <constraints>
+              <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="7" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <font size="14"/>
+              <text value="Log"/>
+              <toolTipText value="log in gradle task"/>
+            </properties>
+          </component>
+          <component id="89184" class="javax.swing.JLabel" binding="jlTips">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <font size="14" style="1"/>
+              <text value="Search :"/>
+            </properties>
+          </component>
           <component id="4634b" class="javax.swing.JComboBox" binding="cbSorted">
             <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="80" height="-1"/>
+              </grid>
             </constraints>
             <properties>
               <model>

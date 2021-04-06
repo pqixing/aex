@@ -37,5 +37,7 @@ class PathSelectDialog(project: Project, path: String, val onSelect: (selects: S
         onSelect(null)
     }
 
-    override fun createDoNotAskCheckbox(): JComponent? = null
+    override fun createMenus(): List<JComponent?> {
+        return emptyList()
+    }
 }

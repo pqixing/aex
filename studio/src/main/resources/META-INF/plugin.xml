@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.pqixing.aex</id>
     <name>AEX</name>
-    <version>1.0.10</version>
+    <version>1.0.12</version>
     <vendor email="pqixing86@gmail.com" url="https://github.com/pqixing/aex">pqixing
     </vendor>
 
@@ -38,11 +38,12 @@
     <depends>org.jetbrains.android</depends>
     <actions>
 
-        <group id="XModule" popup="true" text="AEX" class="com.pqixing.intellij.common.XGroup" icon="AllIcons.Actions.ShowAsTree">
+        <group id="AEX" popup="true" text="AEX" class="com.pqixing.intellij.common.XGroup">
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
-            <add-to-group group-id="NavBarToolBarOthers" anchor="last"/>
 
+            <action id="AEX.XDebugAction" class="com.pqixing.intellij.actions.XDebugAction" text="Debug"/>
+            <separator/>
             <action id="AEX.XImportAction" class="com.pqixing.intellij.actions.XImportAction" text="Import"/>
             <action id="AEX.BuilderAction" class="com.pqixing.intellij.actions.XBuilderAction" text="Builder">
                 <add-to-group group-id="ToolbarRunGroup" relative-to-action="DeviceAndSnapshotComboBox" anchor="after"/>
@@ -57,7 +58,7 @@
 
             <separator/>
             <action id="AEX.XGitAction" class="com.pqixing.intellij.actions.XGitAction" text="Git Batch"/>
-            <action id="AEX.XProjectAction" class="com.pqixing.intellij.actions.XProjectAction" text="AEX Project">
+            <action id="AEX.XProjectAction" class="com.pqixing.intellij.actions.XProjectAction" text="Open AEX">
                 <add-to-group group-id="WelcomeScreen.Configure" anchor="first"/>
                 <add-to-group group-id="FileMenu" anchor="first"/>
             </action>

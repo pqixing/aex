@@ -10,21 +10,32 @@ import java.io.File
  */
 open class ApkBuildResult(val set: XSetting, val pro: Project) {
 
-
-    fun findAllApk(dir: File, set: MutableSet<File>) {
+    private fun findAllApk(dir: File, set: MutableSet<File>) {
         if (!dir.exists() || !dir.isDirectory) return
 
-        dir.listFiles()?.forEach {
-            if (it.isDirectory) findAllApk(it, set)
-            if (it.isFile && it.name.endsWith(".apk")) {
-                set.add(it)
+        for (file in dir.listFiles() ?: return) {
+            if (file.isDirectory) findAllApk(file, set)
+            if (file.isFile && file.name.endsWith(".apk")) {
+                set.add(file)
             }
         }
+    }
 
+    private fun tryCopy(lastCreateFile: File) {
+        //待拷贝的目录
+        val copyFile = File(set.manifest.config.opts.takeIf { it.isNotEmpty() } ?: return)
+        set.println("Start copy result to : $copyFile")
+        if (copyFile.name.endsWith(".apk")) {
+            FileUtils.copy(lastCreateFile, copyFile)
+            return
+        }
+        if (copyFile.exists() && !copyFile.isDirectory) return
+        //拷贝整个目录
+        FileUtils.copy(File(pro.buildDir, "outputs"), copyFile)
+        FileUtils.copy(lastCreateFile, File(copyFile, "${pro.name}.apk"))
     }
 
     fun onAssemble(task: String) {
-
         val apks = mutableSetOf<File>()
         findAllApk(File(pro.buildDir, "outputs/apk"), apks)
         if (apks.isEmpty()) return
@@ -34,23 +45,8 @@ open class ApkBuildResult(val set: XSetting, val pro: Project) {
         if (lastCreateFile.lastModified() - System.currentTimeMillis() >= 1000 * 30) {
             return
         }
-        set.println("BuildApk ${pro.name} -> $task -> ${lastCreateFile.absolutePath}")
-
-        val buildApkPath = set.manifest.config.opts.takeIf { it.isNotEmpty() }
-
-        val outPath = buildApkPath ?: return set.writeResult(lastCreateFile.absolutePath)
-
-        val copyFile = File(outPath)
-        if (copyFile.name.endsWith(".apk")) {
-            FileUtils.copy(lastCreateFile, copyFile)
-            set.writeResult(outPath)
-        } else if (!copyFile.exists()) {
-            copyFile.mkdirs()
-        }
-
-        if (copyFile.isDirectory) {
-            FileUtils.copy(lastCreateFile, File(copyFile, lastCreateFile.name))
-            set.writeResult("${outPath}/${lastCreateFile.name}")
-        }
+        tryCopy(lastCreateFile)
+        set.println("Result [ ${pro.name}:$task ] : ${lastCreateFile.absolutePath}")
+        set.writeResult(lastCreateFile.absolutePath)
     }
 }

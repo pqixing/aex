@@ -16,19 +16,68 @@ import com.intellij.openapi.vcs.VcsDirectoryMapping
 import com.intellij.openapi.vcs.impl.ProjectLevelVcsManagerImpl
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.wm.ToolWindowManager
+import com.pqixing.XHelper
 import com.pqixing.model.impl.ProjectX
 import com.pqixing.tools.FileUtils
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.File
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 
 object XApp {
-
+    private val executors: ExecutorService by lazy { Executors.newSingleThreadExecutor() }
+    private val exeTimes = hashMapOf<String, Long>()
+    private val enables = hashMapOf<String, Boolean>()
     val maps: Properties by lazy { FileUtils.readProperties(File(cacheDir(), "share.xml")) }
     private val BALLOON: NotificationGroup by lazy { notificationGroup(true) }
     private val LOG: NotificationGroup by lazy { notificationGroup(false) }
+
+    /**
+     * 检查当前是否是ex项目
+     */
+    fun isExProject(project: Project?, check: Boolean, async: (s: Boolean) -> Unit = {}): Boolean {
+        return isEnable(project, "isExProject", check, async) {
+            XHelper.ideImportFile(project?.basePath ?: "").exists()
+        }
+    }
+
+    /**
+     * 检查当前是否有更新
+     */
+    fun isRepoUpdate(project: Project?, check: Boolean, async: (s: Boolean) -> Unit = {}): Boolean {
+        return isExProject(project, false) && isEnable(project, "isRepoUpdate", check, async) {
+            it ?: return@isEnable null
+
+            val basePath = project?.basePath ?: return@isEnable false
+            val manifest = XHelper.readManifest(basePath) ?: return@isEnable false
+            XHelper.checkRepoUpdate(true, basePath, manifest.root.name, manifest.root.project.maven)
+        }
+    }
+
+
+    private fun isEnable(project: Project?, key: String, check: Boolean, async: (s: Boolean) -> Unit, call: (old: Boolean?) -> Boolean?): Boolean {
+        val newKey = "${project.hashCode()}_$key"
+        var oldValue = enables[newKey]
+
+        //5秒内不重新检查
+        if (!check || System.currentTimeMillis() - (exeTimes[newKey] ?: 0L) < 5000L) return oldValue ?: false
+        exeTimes[newKey] = System.currentTimeMillis()
+        if (oldValue == null) {
+            oldValue = call(oldValue)
+        }
+        if (oldValue != null) enables[newKey] = oldValue
+        executors.execute {
+            val value = call(oldValue ?: false)
+            if (value != null && value != oldValue) {
+                enables[newKey] = value
+                async(value)
+            }
+        }
+        return enables[newKey] ?: false
+    }
 
     /**
      * 获取group方法,兼容性处理
@@ -70,7 +119,7 @@ object XApp {
         ideaApp().invokeAndWait(cmd)
     }
 
-    fun cacheDir() = File(System.getProperty("user.home"), ".idea/xmodule").also { if (!it.exists()) it.mkdirs() }
+    fun cacheDir() = File(System.getProperty("user.home"), ".idea/aex").also { if (!it.exists()) it.mkdirs() }
 
     fun invokeWrite(cmd: () -> Unit) = invoke { ideaApp().runWriteAction(cmd) }
 

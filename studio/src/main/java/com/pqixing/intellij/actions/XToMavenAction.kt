@@ -3,78 +3,75 @@ package com.pqixing.intellij.actions
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.LangDataKeys
-import com.intellij.openapi.fileChooser.FileChooser
-import com.intellij.openapi.fileChooser.FileChooserDescriptor
-import com.intellij.openapi.module.ModuleManager
+import com.intellij.ui.PopupMenuListenerAdapter
+import com.intellij.ui.awt.RelativePoint
 import com.pqixing.intellij.XApp
+import com.pqixing.intellij.XApp.getSp
+import com.pqixing.intellij.XApp.putSp
 import com.pqixing.intellij.XNotifyAction
 import com.pqixing.intellij.common.XEventAction
 import com.pqixing.intellij.gradle.GradleRequest
-import com.pqixing.intellij.ui.weight.*
+import com.pqixing.intellij.gradle.TaskPopParam
+import com.pqixing.intellij.ui.pop.PopOption
+import com.pqixing.intellij.ui.pop.XListPopupImpl
+import com.pqixing.intellij.ui.weight.XItem
+import com.pqixing.intellij.ui.weight.XModuleDialog
 import com.pqixing.intellij.uitils.UiUtils.realName
 import com.pqixing.model.impl.ModuleX
 import git4idea.repo.GitRepository
-import javax.swing.*
+import java.awt.Point
+import javax.swing.JCheckBox
+import javax.swing.JComboBox
+import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.event.PopupMenuEvent
 
 
 open class XToMavenAction : XEventAction<XToMavenDialog>()
 
 class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
     private var pTop: JPanel? = null
+    val KEY_CONDITION = "KEY_CONDITION"
+    private lateinit var cbCondition: JComboBox<String>
     override fun createNorthPanel(): JComponent? = pTop
-
-    private lateinit var btnFile: JButton
-    private lateinit var cbRepeat: JCheckBox
-    private lateinit var cbBranch: JCheckBox
-    private lateinit var cbClean: JCheckBox
-    private lateinit var cbShowAll: JCheckBox
-    private lateinit var jlTopTitle: JLabel
-
-    private lateinit var btnPick: JButton
-    private lateinit var tvMapFile: JTextField
-
-    val locals = ModuleManager.getInstance(project).modules.map { it.realName() }
     val curModule = e.getData(LangDataKeys.MODULE)?.realName()
-    override fun getTitleStr(): String = "ToMaven : ${manifest.branch}"
+    private val helper = TaskPopParam("maven", project, this)
+    val conditions = listOf(
+        PopOption("2", "clean", "      allow code not clean "),
+        PopOption("1", "repeat", "    allow code not change "),
+        PopOption("3", "branch", "   allow branch different ")
+    )
 
+    override fun getTitleStr(): String = "ToMaven : ${manifest.branch}"
 
     override fun initWidget() {
         super.initWidget()
-        jlTopTitle.text = manifest.root.name + "    "
-        cbShowAll.addItemListener { onShowAllChange(cbShowAll.isSelected) }
-        val ignore = manifest.config.ignore
-        cbRepeat.isSelected = ignore.contains("1")
-        cbClean.isSelected = ignore.contains("2")
-        cbBranch.isSelected = ignore.contains("3")
-        initMapFile()
-
+        initConditions()
     }
 
-    private fun initMapFile() {
-        tvMapFile.text = manifest.config.mapping
-        btnFile.toolTipText = tvMapFile.text
-        btnFile.addActionListener {
-            val inputMap = btnPick.isVisible
-            for (component in (tvMapFile.parent as JPanel).components.sortedBy { it.x }) {
-                if (component === btnFile) break
-                component.isVisible = inputMap
+    private fun initConditions() {
+        val onSelectChange = { s: Boolean ->
+            var newItem = conditions.filter { it.selected }.joinToString(" , ") { it.title }
+            if(newItem.isEmpty()){
+                newItem = "   ------  "
             }
-            btnPick.isVisible = !inputMap
-            tvMapFile.isVisible = !inputMap
-            btnFile.toolTipText = tvMapFile.text
+            cbCondition.removeAllItems()
+            cbCondition.addItem(newItem)
+            cbCondition.selectedItem = newItem
         }
 
-        btnPick.addActionListener { e ->
-            FileChooser.chooseFiles(
-                FileChooserDescriptor(true, false, false, false, false, false),
-                project, project.projectFile
-            ) { it.firstOrNull()?.canonicalPath?.let { l -> tvMapFile.text = l } }
+        val condition = KEY_CONDITION.getSp(manifest.config.ignore, project).toString()
+        conditions.forEach {
+            it.selected = condition.contains(it.option!!)
+            it.onSelectChange = onSelectChange
         }
-    }
-
-    fun onShowAllChange(selected: Boolean) {
-        adapter.datas().forEach { it.visible = selected || locals.contains(it.title) }
-        onSelect(null)
+        cbCondition.addPopupMenuListener(object : PopupMenuListenerAdapter() {
+            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+                cbCondition.hidePopup()
+                XListPopupImpl(project, "", conditions) { _, _, _ -> }.show(RelativePoint(cbCondition, Point(3, cbCondition.height)))
+            }
+        })
+        onSelectChange(false)
     }
 
     override fun onSelect(item: XItem?) {
@@ -88,23 +85,20 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
 
     override fun onItemUpdate(item: XItem, module: ModuleX, repo: GitRepository?): Boolean {
         item.select = curModule == module.name
-        val compileStr = "${module.group()}:${module.name}:${module.version}"
-        item.content = "${module.group()}:${module.version}"
-        item.tvContent.toolTipText = compileStr
-        item.tvContent.addMouseClickR { c, e -> onCopyClickR(item, c, e, listOf(compileStr, module.maven().url)) }
-        item.visible = locals.contains(module.name)
+//        item.content = "${module.maven().group}:${module.version}"
+        item.visible = helper.locals.contains(module.name)
         return super.onItemUpdate(item, module, repo)
     }
 
     /**
      * 开始上传代码
      */
-    private fun startToMaven(item: XItem, ignore: String, mapping: String, activate: Boolean = false) {
+    private fun startToMaven(item: XItem, ignore: String, mapping: String, gradleParam: Map<String, String>, activate: Boolean = false) {
         isOKActionEnabled = false
         item.state = XItem.KEY_WAIT
         GradleRequest(
             listOf(":${item.title}:ToMaven"),
-            mapOf("include" to item.title, "local" to "false", "ignore" to ignore, "mapping" to mapping),
+            mapOf("include" to item.title, "local" to "false", "ignore" to ignore, "mapping" to mapping) + gradleParam,
             activate = activate
         ).runGradle(project) { result ->
             if (!result.success) {
@@ -116,7 +110,7 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
                     "ToMaven Fail",
                     msg,
                     NotificationType.WARNING,
-                    listOf(XNotifyAction("Retry") { startToMaven(item, ignore, mapping) })
+                    listOf(XNotifyAction("Retry") { startToMaven(item, ignore, mapping, gradleParam) })
                 )
                 return@runGradle
             }
@@ -125,7 +119,7 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
             item.select = false
 
             val next = adapter.datas().find { it.select && it.visible }
-            if (next != null) return@runGradle XApp.invoke { startToMaven(next, ignore, mapping) }
+            if (next != null) return@runGradle XApp.invoke { startToMaven(next, ignore, mapping, gradleParam) }
 
             isOKActionEnabled = true
             XApp.notify(project, "ToMaven Finish", "")
@@ -133,13 +127,16 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
         }
     }
 
+    override fun moreActions(): List<PopOption<String>> {
+        return helper.getActions()
+    }
+
     override fun doOKAction() {
         val next = adapter.datas().find { it.select && it.visible } ?: return
         isOKActionEnabled = false
-        val ignore = arrayOf(cbRepeat.isSelected, cbClean.isSelected, cbBranch.isSelected)
-            .mapIndexedNotNull { index: Int, b: Boolean -> (index + 1).takeIf { b } }
-            .joinToString(",")
-        startToMaven(next, ignore, tvMapFile.text.trim(), true)
+        val condition = conditions.filter { it.selected }.joinToString(",") { it.option + "" }
+        KEY_CONDITION.putSp(condition, project)
+        startToMaven(next, condition, helper.mapping, helper.getGradleParams(), true)
     }
 }
 

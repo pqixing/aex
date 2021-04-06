@@ -55,8 +55,9 @@ aex {
 
 //设置插件环境
 buildscript {
+    repositories { maven { url 'https://dl.bintray.com/pqixing86/aex' } }
     repositories { maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' } }
-    dependencies { classpath 'com.pqixing.aex:module:1.0.10' }
+    dependencies { classpath 'com.pqixing.aex:module:1.0.15' }
     //依赖本地调试
 //    repositories { maven { url uri("$rootDir.absolutePath/script/repo") } }; dependencies { classpath "com.pqixing.aex.local:module:1.0.+" }
 }

@@ -20,7 +20,12 @@ import org.jetbrains.plugins.gradle.settings.GradleExecutionSettings
 import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.io.File
 
-data class GradleRequest(val tasks: List<String>, val env: Map<String, String> = emptyMap(), var visible: Boolean = true,var activate:Boolean = true) {
+data class GradleRequest(
+    val tasks: List<String>,
+    val env: Map<String, String> = emptyMap(),
+    var visible: Boolean = true,
+    var activate: Boolean = true
+) {
 
 
     fun getVmOptions(): String {
@@ -38,7 +43,7 @@ data class GradleRequest(val tasks: List<String>, val env: Map<String, String> =
 
     fun runGradle(project: Project, callBack: (r: GradleResult) -> Unit) {
         val taskId = ExternalSystemTaskId.create(GradleConstants.SYSTEM_ID, ExternalSystemTaskType.EXECUTE_TASK, project)
-        val parse = GradleParse(project, tasks.firstOrNull() ?: "Build", taskId,!activate, visible, callBack)
+        val parse = GradleParse(project, tasks.firstOrNull() ?: "Build", taskId, !activate, visible, callBack)
         val setting = GradleExecutionSettings(null, null, DistributionType.BUNDLED, getVmOptions(), false)
 
 
@@ -62,7 +67,14 @@ data class GradleRequest(val tasks: List<String>, val env: Map<String, String> =
 }
 
 
-class GradleParse(val project: Project, val title: String, taskId: ExternalSystemTaskId, var activate:Boolean = false, visible: Boolean, val callBack: (r: GradleResult) -> Unit) :
+class GradleParse(
+    val project: Project,
+    val title: String,
+    taskId: ExternalSystemTaskId,
+    var activate: Boolean = false,
+    visible: Boolean,
+    val callBack: (r: GradleResult) -> Unit
+) :
     ExternalSystemTaskNotificationListenerAdapter() {
     val result: GradleResult = GradleResult()
     val out = OutResult(project, taskId, visible)
@@ -95,7 +107,9 @@ class GradleParse(val project: Project, val title: String, taskId: ExternalSyste
 
     override fun onTaskOutput(id: ExternalSystemTaskId, text: String, stdOut: Boolean) {
         //尝试调起运行面板
-        activate = activate xor XApp.activateWindow(project, "Build")
+        if (!activate) {
+            activate = XApp.activateWindow(project, "Build")
+        }
 
         out.append(text, stdOut)
         if (text.startsWith(XKeys.PREFIX_IDE_LOG)) {

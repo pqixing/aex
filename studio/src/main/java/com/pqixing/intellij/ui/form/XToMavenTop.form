@@ -9,120 +9,39 @@
     </properties>
     <border type="none"/>
     <children>
-      <grid id="5873" layout-manager="GridLayoutManager" row-count="1" column-count="10" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="5873" layout-manager="GridLayoutManager" row-count="1" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="5" bottom="0" right="5"/>
         <constraints border-constraint="Center"/>
         <properties/>
         <border type="none"/>
         <children>
-          <component id="6842f" class="javax.swing.JButton" binding="btnFile">
+          <hspacer id="fc00b">
             <constraints>
-              <grid row="0" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="4" fill="0" indent="0" use-parent-layout="false">
-                <preferred-size width="50" height="-1"/>
-                <maximum-size width="50" height="-1"/>
-              </grid>
+              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
             </constraints>
-            <properties>
-              <text value="File"/>
-              <toolTipText value=""/>
-            </properties>
-          </component>
-          <component id="eebd8" class="javax.swing.JCheckBox" binding="cbShowAll">
-            <constraints>
-              <grid row="0" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <font size="14"/>
-              <hideActionText value="false"/>
-              <text value="♓"/>
-              <toolTipText value="show all module"/>
-              <verticalTextPosition value="0"/>
-            </properties>
-          </component>
-          <component id="a3ba1" class="javax.swing.JButton" binding="btnPick">
-            <constraints>
-              <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="Pick"/>
-              <toolTipText value="click to choose file"/>
-              <visible value="false"/>
-            </properties>
-          </component>
-          <component id="e5038" class="javax.swing.JTextField" binding="tvMapFile">
-            <constraints>
-              <grid row="0" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                <preferred-size width="150" height="-1"/>
-              </grid>
-            </constraints>
-            <properties>
-              <toolTipText value="input the path for version mapping file "/>
-              <visible value="false"/>
-            </properties>
-          </component>
-          <grid id="896f5" layout-manager="GridLayoutManager" row-count="1" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-            <margin top="0" left="0" bottom="0" right="0"/>
-            <constraints>
-              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
-                <minimum-size width="-1" height="28"/>
-                <preferred-size width="-1" height="28"/>
-              </grid>
-            </constraints>
-            <properties/>
-            <border type="etched"/>
-            <children>
-              <component id="2903b" class="javax.swing.JLabel">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <font style="1"/>
-                  <text value="  Ignore :"/>
-                </properties>
-              </component>
-              <component id="27ab2" class="javax.swing.JCheckBox" binding="cbRepeat">
-                <constraints>
-                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="repeat"/>
-                  <toolTipText value="enable code the same of last upload"/>
-                </properties>
-              </component>
-              <component id="d1580" class="javax.swing.JCheckBox" binding="cbClean">
-                <constraints>
-                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="clean"/>
-                  <toolTipText value="enable code not clean"/>
-                </properties>
-              </component>
-              <component id="b7b5" class="javax.swing.JCheckBox" binding="cbBranch">
-                <constraints>
-                  <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="branch     "/>
-                  <toolTipText value="enable code branch diff root branch"/>
-                </properties>
-              </component>
-            </children>
-          </grid>
-          <component id="527a4" class="javax.swing.JLabel" binding="jlTopTitle">
+          </hspacer>
+          <component id="2903b" class="javax.swing.JLabel">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
               <font size="14" style="1"/>
-              <text value=""/>
+              <text value="Allow :"/>
             </properties>
           </component>
-          <hspacer id="fc00b">
+          <component id="84306" class="com.intellij.openapi.ui.ComboBox" binding="cbCondition">
             <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false">
+                <preferred-size width="230" height="-1"/>
+              </grid>
             </constraints>
-          </hspacer>
+            <properties>
+              <editable value="false"/>
+              <enabled value="true"/>
+              <model/>
+              <swingPopup value="false"/>
+            </properties>
+          </component>
         </children>
       </grid>
     </children>

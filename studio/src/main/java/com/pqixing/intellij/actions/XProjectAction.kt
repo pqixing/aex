@@ -12,7 +12,7 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.pqixing.XHelper
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.common.XEventAction
-import com.pqixing.intellij.ui.JBFilterWrapper
+import com.pqixing.intellij.ui.autoComplete
 import com.pqixing.intellij.ui.weight.XEventDialog
 import com.pqixing.intellij.uitils.GitHelper
 import com.pqixing.tools.FileUtils
@@ -37,19 +37,17 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
     lateinit var tvGitUrl: JTextField
     lateinit var tvDirName: JLabel
     lateinit var cbBrs: JComboBox<String>
-    val cbBrsWapper = JBFilterWrapper(cbBrs) { }
-    override fun getAllCheckBox(): JCheckBox = JCheckBox("Rename", null, false)
-    val rootDir = LocalFileSystem.getInstance().findFileByPath(basePath)
-    override fun doOnAllChange(selected: Boolean) {
-        tvDirName.isVisible = !selected
-
-        val r: Rectangle = content.bounds
-        centerPanal.repaint(r.x, r.y, r.width, r.height)
+    val rename: JCheckBox = JCheckBox("rename", null, false).also {
+        it.addChangeListener { e ->
+            tvDirName.isVisible = !it.isSelected
+            val r: Rectangle = content.bounds
+            centerPanal.repaint(r.x, r.y, r.width, r.height)
+        }
     }
+    val rootDir = LocalFileSystem.getInstance().findFileByPath(basePath)
 
     override fun init() {
         super.init()
-        cbAll.toolTipText = "use path as clone path"
         val manifest = XHelper.readManifest(basePath)
         tvFilePick.addActionListener {
             FileChooser.chooseFiles(
@@ -82,7 +80,7 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
             brs += repo.branches.localBranches.map { it.name }
             brs += repo.branches.remoteBranches.map { it.name.substringAfter("/") }
         }
-        cbBrsWapper.setDatas(brs)
+        cbBrs.autoComplete(project, brs)
         btnDoc.addActionListener { Desktop.getDesktop().browse(URI("https://github.com/pqixing/aex")) }
 
 
@@ -92,7 +90,7 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
         tvDirName.text = "/" + tvGitUrl.text.trim().substringAfterLast("/").substringBefore(".")
     }
 
-    override fun getTitleStr(): String = "AEX Project"
+    override fun getTitleStr(): String = "Open AEX Project"
     override fun doOKAction() {
         val path = tvDir.text.trim()
         val url = tvGitUrl.text.trim()
@@ -102,7 +100,7 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
     }
 
     private fun downloadNewProject(target: Project, branch: String?, dir: File, url: String) = XApp.invoke {
-        val cloneDir = dir.takeIf { cbAll.isSelected } ?: File(dir, url.substringAfterLast("/").substringBeforeLast("."))
+        val cloneDir = dir.takeIf { rename.isSelected } ?: File(dir, url.substringAfterLast("/").substringBeforeLast("."))
 //        if (Messages.showOkCancelDialog(project, " clone : $url \n to $cloneDir", "Start Clone", "OK", "Cancel", null) != Messages.OK) return@invoke
 //        dispose()
         if (cloneDir.exists()) {
@@ -117,6 +115,10 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
             if (success) ProjectUtil.openOrImport(cloneDir.absolutePath, project, true)
             else XApp.invoke { Messages.showMessageDialog("See Event Log Panel", "Clone Fail", null) }
         }
+    }
+
+    override fun createMenus(): List<JComponent?> {
+        return listOf(rename)
     }
 
 
