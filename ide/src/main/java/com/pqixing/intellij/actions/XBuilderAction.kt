@@ -6,21 +6,27 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.labels.LinkLabel
 import com.pqixing.XHelper
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.XApp.getSp
+import com.pqixing.intellij.XApp.getSpList
+import com.pqixing.intellij.XApp.putSp
+import com.pqixing.intellij.XApp.putSpList
 import com.pqixing.intellij.common.XEventAction
 import com.pqixing.intellij.gradle.GradleRequest
 import com.pqixing.intellij.gradle.TaskPopParam
 import com.pqixing.intellij.ui.autoComplete
 import com.pqixing.intellij.ui.pop.PopOption
+import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XItem
 import com.pqixing.intellij.ui.weight.XModuleDialog
 import com.pqixing.intellij.uitils.UiUtils
 import com.pqixing.intellij.uitils.UiUtils.realName
 import com.pqixing.model.impl.ModuleX
 import git4idea.repo.GitRepository
-import java.awt.event.MouseEvent
+import java.awt.Point
 import javax.swing.JCheckBox
 import javax.swing.JComboBox
 import javax.swing.JComponent
@@ -31,12 +37,13 @@ class XBuilderAction : XEventAction<XBuilderDialog>() {
     val FAST_PARAMS = mutableMapOf<Int, BuildParam?>()
 
     override fun update(e: AnActionEvent) {
-        if (e.place != FAST_PLACE) super.update(e) else {
-            val param = FAST_PARAMS[e.project?.hashCode() ?: 0]
-            e.presentation.isVisible = param?.keep == true
-            e.presentation.text = "Run '${param?.module}'[${param?.assemble}]"
+        val p = e.project
+        if (e.place != FAST_PLACE || p == null) super.update(e) else {
+            val param = FAST_PARAMS[p.hashCode()]
+            e.presentation.isVisible = param != null
+            e.presentation.text = "Run :${param?.module}:${param?.task} ;   ${param?.toTipString()}"
             e.presentation.icon = AllIcons.Actions.Rerun
-            e.presentation.isEnabled = param?.state != XItem.KEY_WAIT
+            e.presentation.isEnabled = param?.building == false
         }
     }
 
@@ -44,37 +51,35 @@ class XBuilderAction : XEventAction<XBuilderDialog>() {
         val project = e.project ?: return
         val last = FAST_PARAMS[project.hashCode()]
         if (e.place != FAST_PLACE || last?.module?.isNotEmpty() != true) XBuilderDialog(this, e).show()
-        else tryToAssemble(project, FAST_PARAMS[project.hashCode()]) {}
+        else startBuild(project, FAST_PARAMS[project.hashCode()])
     }
 
-    fun tryToAssemble(project: Project, param: BuildParam?, finish: (result: String?) -> Unit) {
-        val module = param?.module ?: return finish(null)
-        param.state = XItem.KEY_WAIT
-        val envs = mutableMapOf(
-            "include" to module,
-            "assemble" to module,
-            "local" to param.local.toString(),
-            "mapping" to "param_mapping_builder".getSp("", project).toString()
-        )
+    fun startBuild(project: Project, param: BuildParam?, finish: (success: Boolean, result: String?) -> Unit = { _, _ -> }) {
+        val module = param?.module ?: return finish(false, null)
 
-        envs += "param_custom_builder".getSp("", project).toString().split(",").filter { it.contains(":") }
-            .associate { it.substringBefore(":") to it.substringAfter(":") }
+
+        val envs = mutableMapOf("include" to module, "local" to param.local.toString())
+
+        if (param.task.startsWith("assemble")) {
+            envs["assemble"] = module
+        }
 
         if (param.local) {
             envs["include"] = "${module},${XHelper.readManifest(project.basePath!!)?.config?.include}"
         }
 
-        GradleRequest(listOf(":${param.module}:${param.assemble}"), envs).runGradle(project) {
+        param.building = true
+        GradleRequest(listOf(":${param.module}:${param.task}"), envs, param.gradleParam).executeTasks(project) {
             val success = it.success
-            val result = it.getDefaultOrNull() ?: ""
-            param.state = if (success) XItem.KEY_SUCCESS else XItem.KEY_ERROR
-            if (success) {
-                param.result = result
-                XApp.invoke { UiUtils.tryInstall(project, null, result, "param_custom_builder".getSp("-t -r", project).toString()) }
-            } else XApp.notify(project, "Build Fail", type = NotificationType.WARNING)
-            finish(result.takeIf { it.isNotEmpty() })
-            param.buildEnd?.run()
-            param.buildEnd = null
+            val result = it.getDefaultOrNull()?.trim()?.takeIf { it.isNotEmpty() }
+
+            if (!success) {
+                XApp.notify(project, "Build Fail", result ?: "", type = NotificationType.WARNING)
+            } else if (result?.endsWith(".apk") == true) XApp.invoke {
+                UiUtils.tryInstall(project, null, result, param.install)
+            }
+            param.building = false
+            finish(success, result)
         }
     }
 }
@@ -84,29 +89,22 @@ class XBuilderDialog(val action: XBuilderAction, e: AnActionEvent) : XModuleDial
     override fun createNorthPanel(): JComponent? = pTop
     private lateinit var cbAssemble: JComboBox<String>
     private lateinit var cbLocal: JCheckBox
-    private lateinit var cbKeep: JCheckBox
 
-    val params: BuildParam =
-        action.FAST_PARAMS[project.hashCode()] ?: BuildParam(local = manifest.config.local).also { action.FAST_PARAMS[project.hashCode()] = it }
-    val curModule = params.module ?: e.getData(LangDataKeys.MODULE)?.realName()
+    val curModule = e.getData(LangDataKeys.MODULE)?.realName()
 
     val paramHelper = TaskPopParam("builder", project, this)
 
-    override fun getTitleStr(): String = "AEXBuilder : ${manifest.branch}"
+    override fun getTitleStr(): String = "AEXBuilder"
 
     override fun initWidget() {
-        cbKeep.isSelected = params.keep
-        cbLocal.isSelected = params.local
+        cbLocal.isSelected = "BUILD_TASK_LOCAL".getSp("N", project) == "Y"
 
-        cbAssemble.autoComplete(project, mutableListOf("assembleDebug","assembleRelease"))
-        cbAssemble.selectedItem = params.assemble
+        val buildTasks = buildTasks()
+        cbAssemble.autoComplete(project, buildTasks)
+        cbAssemble.selectedItem = buildTasks.first()
 
-        if (params.state == XItem.KEY_WAIT) {
-            params.buildEnd = Runnable { refresh() }
-        }
-        cbKeep.addActionListener { params.keep = cbKeep.isSelected }
         //安装拖进来的安装包
-        UiUtils.setTransfer(content) { files ->
+        UiUtils.setTransfer(center) { files ->
             val apk = files.find { it.exists() && it.name.endsWith(".apk") }
             if (apk != null && Messages.showOkCancelDialog(project, "$apk", "Install", "Yes", "No", null) == Messages.OK) {
                 UiUtils.tryInstall(project, null, "", paramHelper.install)
@@ -116,57 +114,105 @@ class XBuilderDialog(val action: XBuilderAction, e: AnActionEvent) : XModuleDial
 
     override fun onItemUpdate(item: XItem, module: ModuleX, repo: GitRepository?): Boolean {
         item.select = curModule == module.name
-        item.state = if (params.module == module.name) params.state else XItem.KEY_IDLE
-        item.cbSelect.addItemListener { onSelect(item) }
         item.visible = paramHelper.locals.contains(module.name)
         return module.typeX().android()
     }
 
-    override fun onTitleClickR(item: XItem, module: ModuleX?, c: JComponent, e: MouseEvent) {
-
-    }
-
-    private fun refresh() {
-        isOKActionEnabled = params.state != XItem.KEY_WAIT && adapter.datas().find { it.select } != null
-        val item = adapter.datas().find { it.title == params.module } ?: return
-        item.state = params.state
+    fun buildTasks(newTask: String? = null): List<String> {
+        val tasks = "BUILD_TASK".getSpList("assembleDebug,assembleRelease", project).toMutableList()
+        if (newTask != null) {
+            tasks.remove(newTask)
+            tasks.add(0, newTask)
+            "BUILD_TASK".putSpList(tasks, project)
+        }
+        return tasks
     }
 
     override fun doOKAction() {
-        val runModule = adapter.datas().find { it.select } ?: return
-        super.doOKAction()
-        params.module = runModule.title
-        params.local = cbLocal.isSelected
-        params.keep = cbKeep.isSelected
-        params.state = XItem.KEY_WAIT
-        params.assemble = cbAssemble.selectedItem?.toString() ?: "assembleDebug"
-        action.tryToAssemble(project, params) { refresh() }
-        refresh()
+        val runModule = adapter.datas().filter { it.visible && it.select }.takeIf { it.isNotEmpty() } ?: return
+        val task = cbAssemble.selectedItem?.toString()?.takeIf { it.isNotEmpty() } ?: return
+
+        buildTasks(task)
+        "BUILD_TASK_LOCAL".putSp(if (cbLocal.isSelected) "Y" else "N", project)
+
+        val param = BuildParam("", task, cbLocal.isSelected, paramHelper.install, paramHelper.getGradleParams(), false)
+
+        startBuild(runModule.first(), param)
+    }
+
+    fun startBuild(item: XItem, param: BuildParam) {
+
+        item.state = XItem.KEY_WAIT
+        param.module = item.title
+        isOKActionEnabled = false
+        action.startBuild(project, param) { s, r ->
+            if (!s) {
+                item.state = XItem.KEY_ERROR
+                isOKActionEnabled = true
+                return@startBuild
+            }
+
+            item.state = XItem.KEY_SUCCESS
+            item.select = false
+
+            val next = adapter.datas().find { it.select && it.visible }
+
+            if (next != null) XApp.invoke {
+                startBuild(next, param)
+            } else {
+                isOKActionEnabled = true
+                XApp.notify(project, "Build Finish", "")
+            }
+        }
+    }
+
+
+    override fun onSelect(item: XItem?) {
+        super.onSelect(item)
+        isOKActionEnabled = adapter.datas().any { it.visible && it.select }
+    }
+
+    override fun createMenus(): List<JComponent?> {
+        val hasAttach = action.FAST_PARAMS[project.hashCode()] != null
+        val attach = createLinkText("toolbar", if (hasAttach) AllIcons.Actions.Selectall else ICON_UNCHECKED) { showAttachPop(it) }
+        return listOf(attach) + super.createMenus()
+    }
+
+    private fun showAttachPop(linkText: LinkLabel<String>) {
+
+        val param = action.FAST_PARAMS[project.hashCode()]
+        val options = adapter.datas().filter { it.visible }.map {
+            PopOption(it, it.title, it.content, it.title == param?.module) { attach ->
+                if (attach) {
+                    val task = cbAssemble.selectedItem?.toString()?.takeIf { it.isNotEmpty() } ?: buildTasks().first()
+                    action.FAST_PARAMS[project.hashCode()] =
+                        BuildParam(it.title, task, cbLocal.isSelected, paramHelper.install, paramHelper.getGradleParams(), false)
+                } else {
+                    action.FAST_PARAMS.remove(project.hashCode())
+                }
+                linkText.icon = if (attach) AllIcons.Actions.Selectall else ICON_UNCHECKED
+            }
+        }
+
+        XListPopupImpl(project, "Attach To Toolbar", options.sortedBy { !it.selected }).show(
+            RelativePoint(morePanel, Point(0, morePanel.height + 10))
+        )
     }
 
     override fun moreActions(): List<PopOption<String>> {
         return paramHelper.getActions() + paramHelper.installOption()
     }
-
-    /**
-     * 只允许单选
-     */
-    override fun onSelect(item: XItem?) {
-        super.onSelect(item)
-        item ?: return
-        val cacel = if (!item.select) null else adapter.datas().filter { it.select && it != item }
-        //防止重复刷新
-        if (cacel?.isNotEmpty() == true) cacel.forEach { it.select = false } else refresh()
-    }
 }
 
-data class BuildParam(
-    var module: String? = null,
-    var assemble: String = "assembleDebug",
-    var keep: Boolean = false,
+class BuildParam(
+    var module: String,
+    var task: String = "assembleDebug",
     var local: Boolean = true,
-    var result: String = ""
+    var install: String = "-r -t",
+    var gradleParam: String = "",
+    var building: Boolean = false
 ) {
-    var state: String = ""
-    var buildEnd: Runnable? = null
+    fun toTipString(): String {
+        return "local=$local, install='$install', param='$gradleParam', building=$building"
+    }
 }

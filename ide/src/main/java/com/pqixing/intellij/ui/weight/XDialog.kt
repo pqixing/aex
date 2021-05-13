@@ -8,10 +8,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.labels.LinkLabel
-import com.intellij.ui.components.labels.LinkListener
 import com.intellij.ui.scale.JBUIScale
+import com.intellij.util.ui.EmptyIcon
 import com.pqixing.XHelper
 import com.pqixing.intellij.XApp
+import com.pqixing.intellij.XApp.getSp
+import com.pqixing.intellij.XApp.putSp
 import com.pqixing.intellij.ui.adapter.XBaseAdapter
 import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
@@ -22,14 +24,12 @@ import com.pqixing.model.impl.ModuleX
 import com.pqixing.model.impl.ProjectX
 import git4idea.repo.GitRepository
 import java.awt.FlowLayout
-import java.awt.Font
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
-import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
 import javax.swing.*
-import javax.swing.border.TitledBorder
 
 open class XModuleDialog(e: AnActionEvent) : XEventDialog(e) {
     val manifest = XHelper.readManifest(basePath) ?: ManifestX(basePath)
@@ -44,11 +44,79 @@ open class XModuleDialog(e: AnActionEvent) : XEventDialog(e) {
         XApp.runAsyn {
             adapter.set(loadList())
             afterInit()
+            tBranch.text = manifest.branch
         }
     }
 
+    override fun onCheckoutModel(c: JComponent, e: MouseEvent) {
+        val model = tCheckout.text
+        val options = listOf("root", "select", "all").map { m ->
+            PopOption(m, m, "", m == model) {
+                tCheckout.text = m
+                VCS_MODEL_CHECKOUT.putSp(m, project)
+            }
+        }
+        c.showPopup(project, options, "checkout model", Point(0, c.height))
+    }
+
+    protected open fun onCheckout(branch: String) {
+
+    }
+
+    override fun onBranchClick(c: JComponent, e: MouseEvent) {
+
+        val projectDir = File(project.basePath ?: return)
+
+        val repo = GitHelper.getRepo(projectDir, project) ?: return
+
+        val branch = manifest.branch
+
+        val model = tCheckout.text
+
+        val brs = repo.branches.let { brs -> brs.localBranches.map { it.name }.plus(brs.remoteBranches.map { it.name.substringAfter("/") }) }.toSet()
+
+        val menus = brs.sorted().map { br -> PopOption(br, br, "", br == branch) }.sortedBy { !it.selected }
+
+        if (menus.isNotEmpty()) XListPopupImpl(project, "$model : checkout branches", menus) { r, p, i ->
+            p.dispose()
+
+            //根据不同的模型设置切换的条目
+            val items = when (model) {
+                "all" -> adapter.datas()
+                "select" -> adapter.datas().filter { it.visible && it.select }
+                else -> emptyList()
+            }
+
+            startCheckouts(repo, i.title, items)
+        }.show(RelativePoint(c, Point(0, c.height)))
+    }
+
+    private fun startCheckouts(root: GitRepository, branch: String, items: List<XItem>) = XApp.runAsyn {
+
+        it.text = "checkout root to $branch"
+        tBranch.text = "checkout ..."
+        GitHelper.checkoutSync(project, branch, listOf(root))
+        root.update()
+        manifest.branch = branch
+        tBranch.text = branch
+
+        for (item in items) kotlin.runCatching {
+            it.text = "checkout ${item.title} to $branch"
+            item.state = XItem.KEY_WAIT
+            val repo = item.get<GitRepository>(KEY_REPO)
+            if (repo == null) item.state = XItem.KEY_ERROR
+            else {
+                GitHelper.checkoutSync(project, branch, listOf(repo))
+                repo.update()
+                item.tag = repo.currentBranchName ?: ""
+                item.state = if (item.tag == branch) XItem.KEY_SUCCESS else XItem.KEY_ERROR
+            }
+        }
+        onCheckout(root.currentBranchName ?: branch)
+    }
+
     open fun afterInit() {
-        adapter.datas().forEach { item -> item.cbSelect.addItemListener { onSelect(item) } }
+        adapter.datas().forEach { item -> item.tvTitle.addItemListener { onSelect(item) } }
         onSelect(null)
     }
 
@@ -62,8 +130,8 @@ open class XModuleDialog(e: AnActionEvent) : XEventDialog(e) {
                 item.content = m.desc + "-" + m.type
                 item.tag = repo?.currentBranchName ?: ""
                 item.tvTitle.addMouseClick(item.left) { c, e -> onTitleClickR(item, m, c, e) }
-                item.tvTag.addMouseClick(item.left) { c, e -> onTagClickR(item, c, e) }
                 item.tvContent.addMouseClick(item.left) { c, e -> onContentClickR(item, c, e, onCopyItems(item)) }
+                item.tvTag.addMouseClick { c, e -> onTagClickR(item, c, e) }
                 item.params[KEY_REPO] = repo
                 item.params[KEY_DATA] = m
                 onItemUpdate(item, m, repo)
@@ -93,15 +161,15 @@ open class XModuleDialog(e: AnActionEvent) : XEventDialog(e) {
 
     protected open fun onTagClickR(item: XItem, c: JComponent, e: MouseEvent) {
         val repo = item.get<GitRepository>(KEY_REPO) ?: return
+        val branch = item.tag
         val brs = repo.branches.let { brs -> brs.localBranches.map { it.name }.plus(brs.remoteBranches.map { it.name.substringAfter("/") }) }.toSet()
-
-        val menus = brs.sorted().map { br -> PopOption("", br, "", false) { checkout(br, repo, item) } }
-        if (menus.isNotEmpty()) c.showPopup(project, menus, "Checkout Branch", Point(e.x, e.y))
+        val menus = brs.sorted().map { br -> PopOption("", br, "", branch == br) { checkout(br, repo, item) } }.sortedBy { !it.selected }
+        if (menus.isNotEmpty()) c.showPopup(project, menus, "checkout", Point(e.x, e.y))
     }
 
     protected open fun onContentClickR(item: XItem, c: JComponent, e: MouseEvent, copys: List<String>) {
         val menus = copys.map { PopOption("", it, "", false) { _ -> XApp.copy(it) } }.toMutableList()
-        if (menus.isNotEmpty()) c.showPopup(project, menus, "Copy Item", Point(e.x, e.y))
+        if (menus.isNotEmpty()) c.showPopup(project, menus, "copy", Point(e.x, e.y))
     }
 
     protected open fun checkout(branch: String, repo: GitRepository, item: XItem) {
@@ -130,7 +198,7 @@ open class XModuleDialog(e: AnActionEvent) : XEventDialog(e) {
             val select = m.second.all { it.select }
             PopOption(m.second, m.first, " (${m.second.size})", select) { _ -> m.second.forEach { it.select = !select } }
         }
-        c.showPopup(project, items, "Select Item", Point(e.x, e.y))
+        c.showPopup(project, items, "select", Point(e.x, e.y))
     }
 
 
@@ -143,31 +211,50 @@ open class XEventDialog(val e: AnActionEvent, project: Project = e.project!!, va
 
 open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
 
+    companion object {
+        val ICON_UNCHECKED = EmptyIcon.create(16)
+    }
+
+    protected val VCS_MODEL_CHECKOUT = "VCS_MODEL_CHECKOUT"
     protected var adapter: XBaseAdapter
-    protected lateinit var content: JScrollPane
-    protected lateinit var center: JPanel
-    protected val border = content.border as TitledBorder
+    protected lateinit var center: JScrollPane
+    protected lateinit var top: JPanel
+    protected lateinit var data: JPanel
+
+    protected lateinit var root: JPanel
+
+    protected lateinit var tSelect: JLabel
+    protected lateinit var tAll: JLabel
+    protected lateinit var tNone: JLabel
+    protected lateinit var tInvert: JLabel
+    protected lateinit var tBranch: JLabel
+    protected lateinit var tCheckout: JLabel
+    protected lateinit var tRoot: JLabel
+
     protected val morePanel = JPanel(FlowLayout())
 
     init {
-        adapter = XBaseAdapter(center)
-        content.addMouseClick { c, e -> showOperator(c, e) }
-        content.verticalScrollBar.unitIncrement = 10
-        border.titleFont = Font("title",Font.BOLD,14)
+        adapter = XBaseAdapter(data)
+        center.verticalScrollBar.unitIncrement = 10
         isModal = false
+        tSelect.addMouseClick { c, e -> showSelectPop(tSelect, e) }
+        tAll.addMouseClick { c, e -> changeSelect { true } }
+        tNone.addMouseClick { c, e -> changeSelect { false } }
+        tInvert.addMouseClick { c, e -> changeSelect { !it.select } }
+        tBranch.addMouseClick { c, e -> onBranchClick(c, e) }
+        tCheckout.addMouseClick { c, e -> onCheckoutModel(c, e) }
+        tCheckout.text = VCS_MODEL_CHECKOUT.getSp("all", project).toString()
+    }
+
+    protected open fun onCheckoutModel(c: JComponent, e: MouseEvent) {
+
+    }
+
+    protected open fun onBranchClick(c: JComponent, e: MouseEvent) {
+
     }
 
     fun adapter() = adapter
-    protected open fun checkClickValid(e: MouseEvent) = e.x <= 300 && e.y <= 20
-    protected open fun showOperator(c: JComponent, e: MouseEvent) {
-        if (!checkClickValid(e)) return
-        when (e.x) {
-            in 10..55 -> changeSelect { true }//ALL
-            in 56..118 -> changeSelect { false }//NONE
-            in 119..180 -> changeSelect { !it.select } // INVERT
-            in 185..380 -> showSelectPop(c, e)//SELECT
-        }
-    }
 
     private fun changeSelect(call: (item: XItem) -> Boolean) {
         adapter.datas().forEach { it.select = call(it) }
@@ -175,14 +262,13 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
 
     fun scrollToTarget(key: XItem?) {
         val find = adapter.datas().find { it == key } ?: return
-        center.scrollRectToVisible(find.jItemRoot.bounds)
+        data.scrollRectToVisible(find.jItemRoot.bounds)
     }
 
     protected open fun moreActions(): List<PopOption<String>> = emptyList()
 
     protected open fun showSelectPop(c: JComponent, e: MouseEvent) {
-
-        val title = "Select Item "
+        val title = ""
 
         val optins = adapter.datas().filter { it.visible }
             .map { PopOption(it, it.title, it.content, it.select) { s -> it.select = s } }
@@ -195,7 +281,7 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
             }
         }
 
-        XListPopupImpl(project, title, optins, itemClick).show(RelativePoint(c, Point(180 - c.x, 23)))
+        XListPopupImpl(project, title, optins, itemClick).show(RelativePoint(c, Point(0, 23)))
     }
 
     protected open fun getTitleStr(): String = ""
@@ -203,10 +289,7 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
     open fun onSelect(item: XItem?) {
         val visible = adapter.datas().count { it.visible }
         val selects = adapter.datas().count { it.select && it.visible }
-//        val font = { key: String -> "&nbsp&nbsp&nbsp&nbsp<u><b>$key</b></u>&nbsp&nbsp&nbsp&nbsp" }
-        val font = { key: String -> "  $key  " }
-        border.title = "|${font("all")}|${font("none")}|${font("invert")}|${font("select : $selects/$visible")}|"
-        content.repaint()
+        tSelect.text = "   $selects  /  $visible   |"
     }
 
     override fun show() {
@@ -235,18 +318,21 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
     }
 
     protected open fun createMenus(): List<JComponent?> {
-
-        val onLinkClick = LinkListener<String> { c, d ->
+        val more = createLinkText("more", AllIcons.General.LinkDropTriangle) { c ->
             val moreActions = moreActions()
-            if (moreActions.isEmpty()) return@LinkListener
-            XListPopupImpl(project, "", moreActions).show(RelativePoint(c, Point(0, c.height + 10)))
-        }
-        val more = LinkLabel("more", AllIcons.General.LinkDropTriangle, onLinkClick).apply {
-            iconTextGap = JBUIScale.scale(1)
-            horizontalAlignment = SwingConstants.LEADING
-            horizontalTextPosition = SwingConstants.LEADING
+            if (moreActions.isNotEmpty()) {
+                XListPopupImpl(project, "", moreActions).show(RelativePoint(c, Point(0, c.height + 10)))
+            }
         }
         return listOf(more)
+    }
+
+    protected open fun createLinkText(text: String, icon: Icon?,alignment:Int = SwingConstants.LEADING, click: (c: LinkLabel<String>) -> Unit): LinkLabel<String> {
+        return LinkLabel<String>(text, icon) { c, d -> click(c as LinkLabel<String>) }.apply {
+            iconTextGap = JBUIScale.scale(1)
+            horizontalAlignment = alignment
+            horizontalTextPosition = alignment
+        }
     }
 
     final override fun createDoNotAskCheckbox(): JComponent? {
@@ -256,6 +342,6 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
         return morePanel
     }
 
-    override fun createCenterPanel(): JComponent? = content
+    override fun createCenterPanel(): JComponent? = root
 
 }

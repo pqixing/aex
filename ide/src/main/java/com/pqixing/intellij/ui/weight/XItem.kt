@@ -21,12 +21,11 @@ class XItem {
     }
 
     lateinit var jItemRoot: JPanel
-    lateinit var cbSelect: JCheckBox
-    lateinit var tvTitle: JLabel
+    lateinit var tvTitle: JCheckBox
     lateinit var tvContent: JLabel
     lateinit var tvTag: JLabel
 
-    var left: (c: JComponent, e: MouseEvent) -> Unit = { _, _ -> cbSelect.isSelected = !cbSelect.isSelected }
+    var left: (c: JComponent, e: MouseEvent) -> Unit = { c, e -> if (c != tvTitle) tvTitle.isSelected = !tvTitle.isSelected }
     var right: (c: JComponent, e: MouseEvent) -> Unit = { c, e -> }
     var state: String = KEY_IDLE
         set(value) {
@@ -63,14 +62,9 @@ class XItem {
         }
 
     var select: Boolean
-        get() = cbSelect.isSelected
+        get() = tvTitle.isSelected
         set(value) {
-            cbSelect.isSelected = value
-        }
-    var selectAble: Boolean
-        get() = cbSelect.isVisible
-        set(value) {
-            cbSelect.isVisible = value
+            tvTitle.isSelected = value
         }
 
     var visible: Boolean
@@ -92,24 +86,25 @@ class XItem {
 fun JComponent.addMouseClickL(left: (c: JComponent, e: MouseEvent) -> Unit) = addMouseClick(left, { _, _ -> })
 fun JComponent.addMouseClickR(right: (c: JComponent, e: MouseEvent) -> Unit) = addMouseClick({ _, _ -> }, right)
 fun JComponent.addMouseClick(left: (c: JComponent, e: MouseEvent) -> Unit, right: (c: JComponent, e: MouseEvent) -> Unit = { _, _ -> }) =
-    MouseHandle(this, left, right)
+    MouseHandle(left, right).attach(this)
 
-fun JComponent.addMouseClick(left: (c: JComponent, e: MouseEvent) -> Unit) = MouseHandle(this, left, left)
+fun JComponent.addMouseClick(left: (c: JComponent, e: MouseEvent) -> Unit) = MouseHandle(left, left).attach(this)
 
 class MouseHandle(
-    val component: JComponent,
     val left: (c: JComponent, e: MouseEvent) -> Unit,
     val right: (c: JComponent, e: MouseEvent) -> Unit = { _, _ -> }
 ) : MouseAdapter() {
     var otherClick: (c: JComponent, e: MouseEvent) -> Unit = { _, _ -> }
 
-    init {
+    fun attach(component: JComponent): MouseHandle {
         component.addMouseListener(this)
+        return this
     }
 
     override fun mouseClicked(e: MouseEvent?) {
         super.mouseClicked(e)
         e ?: return
+        val component = e.source as? JComponent ?: return
         when (e.button) {
             MouseEvent.BUTTON3 -> right(component, e)
             MouseEvent.BUTTON1 -> left(component, e)

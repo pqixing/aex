@@ -32,6 +32,8 @@ class VersionManager(val set: XSetting) {
         loadVersionFile(manifest.config.sync || set.gradle.startParameter.taskNames.find { it.contains(XKeys.TASK_TO_MAVEN) } != null)
     }
 
+    fun copyVersions() = curVersions.toMap()
+
     fun loadVersionFile(reload: Boolean) {
         //从网络拉取
         val pomFile = XHelper.reloadRepoMetaFile(reload, manifest.dir, name, maven)
@@ -40,10 +42,6 @@ class VersionManager(val set: XSetting) {
 
         if (reload) {
             set.println("Fetch : ${baseUrl}/${XKeys.XML_META} \nTo    : ${pomFile.absolutePath}")
-        } else XHelper.post {
-            if (XHelper.checkRepoUpdate(false, manifest.dir, name, maven)) {
-                set.println("Fetch : Some components have been updated")
-            }
         }
 
         curVersions.clear()
@@ -64,21 +62,21 @@ class VersionManager(val set: XSetting) {
                     }
                 }
                 version.startsWith("sync.") -> {
-                    curVersions.clear()
                     sync = VersionModel().setUrl(file, url, credentials)
                 }
                 version.startsWith("log.") -> {
                     val spilt = version.substringAfterLast(".").base64Decode().split("=")
-                    curVersions[spilt[0]] = spilt[1].toInt()
+                    val key = spilt[0]
+                    val value = spilt[1].toInt()
+                    curVersions[key] = value.coerceAtLeast(curVersions[key] ?: 0)
                 }
             }
         }
-        if (sync != null) {
-            val syncVersion = sync.check()
-            syncVersion.putAll(curVersions)
-            curVersions.clear()
-            curVersions.putAll(sync)
+
+        sync?.check()?.forEach {
+            curVersions[it.key] = it.value.coerceAtLeast(curVersions[it.key] ?: 0)
         }
+
         //compile所依赖的版本号
         compileVersion.putAll(curVersions)
         //如果使用分支,添加当前分支的tag文件
@@ -99,12 +97,6 @@ class VersionManager(val set: XSetting) {
 
     //pom对象,在内存中缓存一份,防止频繁读取
     private var pomCache: HashMap<String, Pom> = hashMapOf()
-
-    /**
-     * 检查改分支是否存在版本号
-     */
-    fun checkBranchVersion(groupId: String, module: String): Boolean =
-        curVersions.findVersion(groupId, module, "") != null
 
     /**
      * 获取仓库aar中，exclude的传递
@@ -135,17 +127,41 @@ class VersionManager(val set: XSetting) {
 
     /**
      * 返回上传的版本号
+     * @return 返回v.x版本, x随当前存在的版本更新
      */
     fun findUploadVersion(groupId: String, name: String, v: String): String {
-        val find = curVersions.findVersion(groupId, name, v) ?: return "$v.0"
-        val last = find.substringAfterLast(".").toIntOrNull() ?: 0
-        val base = find.substringBeforeLast(".")
-        return "$base.${last + 1}"
-
+        //当前所有匹配到的版本
+        val lastIndex = curVersions.match(groupId, name, v)
+            .mapNotNull { findNextIndex(v, it) }.maxOfOrNull { it } ?: -1
+        return "$v.${lastIndex + 1}"
     }
 
-    fun findCompileVersion(groupId: String, name: String, v: String): String? =
-        compileVersion.findVersion(groupId, name, v)
+    fun findCompileVersion(groupId: String, name: String, v: String): String? {
+        //查找出以当前版本为起始的最大版本号,如果存在,直接返回
+        val match = compileVersion.match(groupId, name, v).firstOrNull()
+        if (match != null) return match
+        if (!v.contains(".")) return null
+
+        val target = v.substringAfterLast(".").toIntOrNull() ?: return null
+        //解析出前缀版本号,etc  v = 0.1.2 ,  before  是0.1
+        val before = v.substringBeforeLast(".")
+
+        //解析出   before.x 版本的x的值, 判断target是不是在x范围中
+        val lastIndex = compileVersion.match(groupId, name, before).mapNotNull { findNextIndex(before, it) }.maxOfOrNull { it }
+        //如果当前v是存在的,直接返回, 比如 传入1.0.1  当最大版本为1.0.2时, 直接查找会失败, 此时检验1.0.1是否存在范围中
+        return if (lastIndex != null && target <= lastIndex) v else null
+    }
+
+    /**
+     * 解析出start的下一位版本号
+     */
+    private fun findNextIndex(start: String, target: String): Int? {
+        if (!target.startsWith("${start}.")) {
+            return null
+        }
+        //解析出  start.xx中的xx,然后转为int, 如果xx里面包含更多的版本设置  比如  x.x, 则转int失败
+        return target.substring(start.length + 1).toIntOrNull()
+    }
 }
 
 /**
@@ -165,20 +181,17 @@ class VersionModel : HashMap<String, Int>() {
     }
 
     /**
-     * 查找出最合适的版本号
+     * 查找出是否存在range   比如  输入 0.1.2,  当最高版本号为0.1.3时,全量match会查找失败,此时判断最后一位数是不是在range范围内
      * 如果没有,则直接返回null
      * @param v 查找版本号,  etc  v = 1 , 则会查出所有版本号里首位是1的数据
      */
-    fun findVersion(groupId: String, name: String, v: String): String? {
-        val key = "$groupId:$name:"
-        //所有匹配规则的版本号
-        return filter { it.key.startsWith(key) }
-            .map { it.key.substringAfterLast(":") + "." + it.value }
-            .filter { v.isEmpty() || it == v || it.startsWith("$v.") }
-            //返回所有匹配的版本中,最大的版本号
-            .sortedWith { v1, v2 -> TextUtils.compareVersion(v1, v2) }
-            .firstOrNull()
-    }
+    fun match(groupId: String, name: String, v: String) = match("$groupId:$name:", v)
+    fun match(key: String, v: String) = filter { it.key.startsWith(key) }
+        .map { it.key.substringAfterLast(":") + "." + it.value }
+        .filter { v.isEmpty() || it == v || it.startsWith("$v.") }
+        //返回所有匹配的版本中,最大的版本号
+        .sortedWith { v1, v2 -> TextUtils.compareVersion(v1, v2) }
+
 
     fun check(): VersionModel {
         val f = file ?: return this

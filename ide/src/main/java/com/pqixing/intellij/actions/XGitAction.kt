@@ -1,13 +1,17 @@
 package com.pqixing.intellij.actions
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.ui.TextFieldWithAutoCompletion
 import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.labels.LinkLabel
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.XApp.getOrElse
 import com.pqixing.intellij.XApp.getSp
+import com.pqixing.intellij.XApp.getSpList
 import com.pqixing.intellij.XApp.putSp
+import com.pqixing.intellij.XApp.putSpList
 import com.pqixing.intellij.common.XEventAction
 import com.pqixing.intellij.ui.autoComplete
 import com.pqixing.intellij.ui.pop.PopOption
@@ -20,16 +24,17 @@ import com.pqixing.model.impl.ProjectX
 import git4idea.GitUtil
 import git4idea.commands.GitCommand
 import git4idea.repo.GitRepository
+import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.event.ActionListener
 import java.io.File
 import java.lang.reflect.Modifier
-import javax.swing.JButton
 import javax.swing.JComboBox
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 open class XGitAction : XEventAction<XGitDialog>()
 class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
@@ -42,14 +47,15 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
     override fun createNorthPanel(): JComponent? = pTop
     private lateinit var cbBrn: JComboBox<String>
     private lateinit var cbOp: JComboBox<IGitCmd>
-    private lateinit var customPanel: JPanel
-    private lateinit var btnPreview: JButton
-    lateinit var tvCustomParam: TextFieldWithAutoCompletion<String>
+    private lateinit var cstPanel: JPanel
+    lateinit var tvCommand: TextFieldWithAutoCompletion<String>
+    lateinit var preview: LinkLabel<*>
+    lateinit var expand: LinkLabel<*>
 
-    var customModel = SP_LAST_GIT_MODEL.getSp("N", project).toString() == "Y"
+    var custom = SP_LAST_GIT_MODEL.getSp("N", project).toString() == "Y"
     val listener = GitHelper.GitIndicatorListener(null)
 
-    val lastCmds = SP_CMDS.getSp("", project).toString().split(",").filter { it.isNotEmpty() }.toMutableList()
+    var lastCmds = SP_CMDS.getSpList("", project)
 
     //预设命令
     val preSet = mutableListOf(Checkout(this), Clone(this), Merge(this), Create(this), Delete(this))
@@ -61,16 +67,27 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
 
     override fun initWidget() {
         super.initWidget()
-        tvCustomParam = TextFieldWithAutoCompletion.create(project, lastCmds, true, lastCmds.firstOrNull() ?: "")
-        tvCustomParam.setPreferredWidth(180)
-        tvCustomParam.toolTipText = "Env:\$target , \$name , \$branch"
-        customPanel.add(tvCustomParam, 0)
-        btnPreview.addActionListener { customPreview(customPanel) }
+
+        expand = createLinkText(" ", AllIcons.Diff.ArrowRight, SwingConstants.TRAILING) { custom(!custom) }
+        expand.toolTipText = "switch to custom command model"
+        cstPanel.add(expand, BorderLayout.WEST)
+
+        tvCommand = TextFieldWithAutoCompletion.create(project, lastCmds, true, lastCmds.firstOrNull() ?: "")
+        tvCommand.setPreferredWidth(180)
+        tvCommand.toolTipText = "Env:\$target , \$name , \$branch"
+        tvCommand.isVisible = custom
+        cstPanel.add(tvCommand, BorderLayout.CENTER)
+
+        preview = createLinkText(" ", AllIcons.Diff.ArrowLeftDown) { customPreview(cstPanel) }
+        preview.toolTipText = "preview fully command for each item"
+        preview.isVisible = custom
+        cstPanel.add(preview, BorderLayout.EAST)
+
         XApp.syncVcs(project, manifest.projects, true, false)
     }
 
     private fun customPreview(btnPreview: Component) {
-        val cmdParam = tvCustomParam.text.trim()
+        val cmdParam = tvCommand.text.trim()
         val gitOp = cbOp.selectedItem as IGitCmd
         val selectBr = cbBrn.selectedItem?.toString()?.trim()?.takeIf { it.isNotEmpty() } ?: "master"
         val options = adapter.datas().filter { it.visible && it.select }.map {
@@ -78,21 +95,23 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
                 .replace("\$target", selectBr)
                 .replace("\$name", it.title)
                 .replace("\$branch", it.tag ?: "")
-            PopOption(it, it.title, cmdStr, true) { s -> it.select = s }
+            PopOption(it, cmdStr, "  ->  ${it.title}", true) { s -> it.select = s }
         }
         val pop = XListPopupImpl(project, "", options) { _, _, _ -> }
-        pop.setMinimumSize(Dimension(btnPreview.width-8, 0))
+        pop.setMinimumSize(Dimension(btnPreview.width - 8, 0))
         pop.show(RelativePoint(btnPreview, Point(3, btnPreview.height)))
     }
 
     override fun afterInit() {
         super.afterInit()
-        XApp.invoke { onModeChage(customModel) }
+        XApp.invoke { custom(custom) }
     }
 
-    fun onModeChage(custom: Boolean) {
-        customModel = custom
-        customPanel.isVisible = custom
+    fun custom(custom: Boolean) {
+        this.custom = custom
+        tvCommand.isVisible = custom
+        preview.isVisible = custom
+        expand.icon = if (custom) AllIcons.Diff.Arrow else AllIcons.Diff.ArrowRight
         cbOp.removeActionListener(refresh)
         cbOp.removeAllItems()
 
@@ -106,7 +125,7 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
         onSelect(null)
     }
 
-    override fun getTitleStr(): String = "Git:${manifest.branch}"
+    override fun getTitleStr(): String = "Git"
 
     override fun loadList(): List<XItem> {
         val brs = mutableListOf<String>(manifest.branch)
@@ -115,7 +134,6 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
                 item.visible = false
                 item.title = pro.name
                 item.select = true
-                item.selectAble = true
                 item.content = pro.desc
                 item.right = { _, _ -> }
                 item.tvTitle.addMouseClick(item.left) { c, e -> }
@@ -136,14 +154,13 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
             val selectBr = cbBrn.selectedItem?.toString()?.trim()?.takeIf { it.isNotEmpty() } ?: "master"
             val gitOp = cbOp.selectedItem as IGitCmd
             val selects = adapter.datas().filter { it.visible && it.select }
-            val cmdStr = tvCustomParam.text.trim()
+            val cmdStr = tvCommand.text.trim()
             if (gitOp is Custom && cmdStr.isNotEmpty()) {
-                lastCmds.remove(cmdStr)
-                lastCmds.add(0, cmdStr)
-                SP_CMDS.putSp(lastCmds.joinToString(","), project)
+                lastCmds = SP_CMDS.putSpList(listOf(cmdStr), project)
                 SP_LAST_GIT_OP.putSp(gitOp.name, project)
-                SP_LAST_GIT_MODEL.putSp(customModel.getOrElse("Y", "N"), project)
             }
+
+            SP_LAST_GIT_MODEL.putSp(custom.getOrElse("Y", "N"), project)
             adapter.datas().forEach { it.state = XItem.KEY_IDLE }
             indicator.text = "Start : $gitOp"
             if (gitOp.before(selectBr, selects)) {
@@ -190,13 +207,13 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
         return brs
     }
 
-    override fun moreActions(): List<PopOption<String>> {
+    override fun createMenus(): List<JComponent?> {
+
         val callAction = { id: String -> ActionManager.getInstance().getAction(id).actionPerformed(e) }
-        return listOf(
-            PopOption("", "Custom", "   input git cmd", customModel) { onModeChage(it) },
-            PopOption("", "Pull", "   call ide pull action", false) { callAction("Vcs.UpdateProject") },
-            PopOption("", "Push", "   call ide Push action", false) { callAction("Vcs.Push") }
-        )
+
+        val pull = createLinkText("pull", ICON_UNCHECKED) { callAction("Vcs.UpdateProject") }
+        val push = createLinkText("push", ICON_UNCHECKED) { callAction("Vcs.Push") }
+        return listOf(pull, push)
     }
 
 

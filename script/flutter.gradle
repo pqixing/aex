@@ -1,0 +1,171 @@
+//加载flutter sdk的根目录
+String flutterRoot = findProperty('flutter.sdk') ?: findProperty('FLUTTER_ROOT') ?: loadProperties(rootDir).getProperty('flutter.sdk') ?: System.getenv("FLUTTER_ROOT")
+//flutter的模块group
+String flutterGroup = findProperty("FLUTTER_GROUP")
+//flutter模块的名称
+String flutterModule = findProperty("FLUTTER_MODULE")
+
+
+StringBuilder error = new StringBuilder()
+if (flutterRoot == null) error.append("flutterRoot is null , set envariment FLUTTER_ROOT or flutter.sdk on grradle.properties\n")
+if (flutterGroup == null) error.append("flutterGroup is null , set envariment FLUTTER_GROUP on grradle.properties\n")
+if (flutterModule == null) error.append("flutterModule is null , set envariment FLUTTER_MODULE on grradle.properties\n")
+
+//如果存在未设置的属性
+if (error.length() > 0) {
+    throw new GradleException(error.toString())
+}
+String manifestName = "build/AndroidManifest.xml"
+//设置Android模块的清单文件为根目录的文件
+android.sourceSets.each { it.manifest.srcFile(manifestName) }
+File manifest = file(manifestName)
+
+//如果当前没有清单文件,自动生成清单文件
+if (!manifest.exists()) {
+    String manifestText = '<?xml version="1.0" encoding="utf-8"?>\n<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n    package="' +
+            "${flutterGroup.toLowerCase(Locale.CHINA)}.${flutterModule.toLowerCase(Locale.CHINA)}" + '">\n</manifest>'
+    manifest.write(manifestText)
+}
+
+String dependStr = buildFlutterAar(project, flutterRoot, flutterGroup, flutterModule)
+
+
+//添加flutter aar包的依赖
+if (dependStr != null) {
+    dependencies { api "$dependStr" }
+
+    //为所有项目添加本地本地仓库flutter编译后的输出缓存的依赖
+    String localAarRepo = "$projectDir.absolutePath/build/host/outputs/repo"
+    gradle.afterProject { pro -> pro.repositories { maven { url uri(localAarRepo) } } }
+}
+
+/**
+ * 加载根目录的local.properties
+ * @param rootDir
+ * @return
+ */
+public Properties loadProperties(File rootDir) {
+    def localProperties = new Properties()
+    def localPropertiesFile = new File(rootDir, 'local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withReader('UTF-8') { reader ->
+            localProperties.load(reader)
+        }
+    }
+    return localProperties
+}
+
+/**
+ * 打包aar
+ * @param release
+ * @param sdk
+ * @param group
+ * @param module
+ * @param file
+ * @return
+ */
+public String buildFlutterAar(Project pro, String sdk, String group, String module) {
+
+    //如果是执行tomaven上传操作,编译release,否则编译debug
+    boolean release = pro.forMaven.toMaven
+
+    String type = release ? "release" : "debug"
+    File localRepo = new File(pro.projectDir, "build/host/outputs/repo")
+    String buildNumber = release ? System.currentTimeMillis() : "debug"
+    //在同步结束后,打包aar
+    pro.afterEvaluate {
+        //打release包,则需要删除本地目录
+        if (release) pro.delete(localRepo)
+
+        String flutterCmd = "$sdk/bin/flutter build aar  --no-debug --no-profile --no-release --$type --build-number=$buildNumber"
+
+        def startBuild = System.currentTimeMillis()
+
+        if (handleProcess(flutterCmd, pro.projectDir) != 0) {
+            throw new GradleException("Flutter build aar error for command : $flutterCmd")
+        } else {
+            println("Build flutter aar for $module : ${System.currentTimeMillis() - startBuild} -> $flutterCmd ")
+        }
+        //如果是打包release,需要编译目录,并且把相关的文件上传到maven仓库
+        if (release) pro.gradle.taskGraph.whenReady {
+            def poms = findPoms(localRepo)
+            if (poms.isEmpty()) {
+                throw new GradleException("Not found pom file at :$localRepo")
+            }
+            for (File pom : poms) {
+                //找到上传的文件,可能是jar或者aar
+                def file = pom.parentFile.listFiles().find { it.name.endsWith(".aar") || it.name.endsWith(".jar") }
+                if (file == null) continue
+
+                String repositoryId = "nexus"
+                File mvnXml = new File(pro.projectDir, "build/mvn-setting.xml")
+                //动态生成mvn-setting.xml文件
+                mvnXml.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                        "<settings>\n    <servers>\n        <server>\n" +
+                        "            <id>${repositoryId}</id>\n" +
+                        "            <username>${pro.forMaven.user}</username>\n" +
+                        "            <password>${pro.forMaven.psw}</password>\n        " +
+                        "</server>\n    </servers>\n</settings>")
+
+                def cmdBuilder = new StringBuilder()
+                //加载flutter sdk的根目录
+                String m2Root = findProperty('maven.home') ?: findProperty('M2_HOME') ?: loadProperties(rootDir).getProperty('maven.home') ?: System.getenv("M2_HOME")
+
+                //如果当前项目配置了maven环境,则使用配置的路径,否则直接调用系统mvn命令
+                if (m2Root != null && !m2Root.isEmpty()) {
+                    cmdBuilder.append("${m2Root}/bin/")
+                }
+                cmdBuilder.append("mvn deploy:deploy-file ")
+                ["maven.metadata.legacy": "true", "generatePom": "false",
+                 "url"                  : pro.forMaven.uri(),
+                 "repositoryId"         : repositoryId,
+                 "pomFile"              : pom.absolutePath,
+                 "file"                 : file.absolutePath,
+                 "packaging"            : file.name.substring(file.name.lastIndexOf(".") + 1)
+                ].each { cmdBuilder.append(" -D${it.key}=${it.value} ") }
+
+                cmdBuilder.append(" -s=$mvnXml.absolutePath ")
+
+                String mvnCmd = cmdBuilder.toString()
+                if (handleProcess(mvnCmd, null) != 0) {
+                    throw new GradleException("Flutter upload aar error for command : $mvnCmd")
+                }
+            }
+        }
+    }
+
+    //返回依赖版本
+    return "$group:${module}_$type:$buildNumber"
+}
+
+public List<File> findPoms(File dir) {
+    def poms = new ArrayList<File>()
+
+    def dirs = new LinkedList<File>()
+    dirs.add(dir)
+
+    while (!dirs.isEmpty()) dirs.pollLast().listFiles().each { f ->
+        if (f.isDirectory()) {
+            dirs.push(f)
+        } else if (f.name.endsWith(".pom")) {
+            poms.add(f)
+        }
+    }
+
+    return poms
+}
+
+public int handleProcess(String cmd, File dir) {
+
+    final Process process;
+    try {
+        println("Start exe $cmd at $dir")
+        process = Runtime.getRuntime().exec(cmd, null, dir)
+    } catch (Exception e) {
+        e.printStackTrace()
+        return -1
+    }
+    process.waitForProcessOutput(System.out, System.err)
+
+    return process.exitValue()
+}

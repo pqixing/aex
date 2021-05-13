@@ -61,24 +61,23 @@ open class XPlugin : Plugin<Project> {
 
     private fun forAndroid(pro: Project) {
 
-        val forRun = module.name == set.manifest.config.assemble && module.typeX().library()
+        val type = module.typeX()
 
-        val app = forRun || module.typeX().app()
+        val assemble = type.app() || module.name == set.manifest.config.assemble
         //根据情况进行不同的Android插件依赖
-        pro.apply(mapOf<String, String>("plugin" to if (app) "com.android.application" else "com.android.library"))
+        pro.apply(mapOf<String, String>("plugin" to if (assemble) "com.android.application" else "com.android.library"))
 
-//        //如果是Library模块运行，设置ApplicationId
-        if (forRun) {
-            module.typeX().runs.filter { it.isNotEmpty() }.forEach { module.localEx().depend.include("api '${it}'") }
-
+        //如果不是app模块运行，设置ApplicationId
+        if (assemble && !type.app()) {
+            type.mockRuns.forEach { module.localEx().depend.include("api '${it}'") }
             val idPath = FileUtils.writeText(
                 File(pro.buildDir, "applicationId.gradle"),
                 "android.defaultConfig.applicationId 'com.${module.localEx().branch.pure()}.${module.name.pure()}'"
             )
             pro.apply(mapOf("from" to idPath))
         }
-//        //开始注解切入
-        if (app) pro.afterEvaluate {
+        //开始注解切入
+        if (assemble) pro.afterEvaluate {
             val buildApk = ApkBuildResult(set, pro)
             for (task in pro.tasks.filter { it.name.startsWith("assemble") }) {
                 task.doLast { buildApk.onAssemble(it.name) }

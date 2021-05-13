@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.util.ui.EmptyIcon
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
+import com.pqixing.intellij.ui.weight.XDialog
 import java.awt.Component
 import java.awt.FlowLayout
 import javax.swing.JLabel
@@ -34,7 +35,7 @@ class ListPopCellRender<T> : ListCellRenderer<PopOption<T>> {
             border = if (isSelected && isEnabled) border else null
         }
 
-        iconLabel.icon = if (optionSelected) AllIcons.Actions.Checked else ICON_UNCHECKED
+        iconLabel.icon = if (optionSelected) AllIcons.Actions.Checked else XDialog.ICON_UNCHECKED
 
         optionLabel.apply {
             text = value.title
@@ -61,10 +62,6 @@ class ListPopCellRender<T> : ListCellRenderer<PopOption<T>> {
         add(iconLabel)
         add(optionLabel)
         add(optionDescriptionLabel)
-    }
-
-    companion object {
-        val ICON_UNCHECKED = EmptyIcon.create(12)
     }
 }
 

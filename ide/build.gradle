@@ -1,12 +1,25 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
+        maven {url "https://plugins.gradle.org/m2/"}
+    }
+
+    dependencies {
+        classpath "gradle.plugin.org.jetbrains.intellij.plugins:gradle-intellij-plugin:0.4.26"
+    }
+}
+
 apply plugin: "org.jetbrains.intellij"
 dependencies {
-    compile "com.alibaba:fastjson:1.2.68"
+    api "com.alibaba:fastjson:1.2.75"
 }
 
 intellij {
     pluginName 'aex'
     version 'IC-2020.1'//设定依赖的版本
-//    localPath '/Applications/IntelliJCE.app' //当前依赖本地版本
+//    localPath '/Applications/StudioAP.app' //当前依赖本地版本
     plugins = ['android', 'git4idea', "java", "gradle"]
     updateSinceUntilBuild false
 }

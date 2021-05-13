@@ -4,6 +4,7 @@ import com.pqixing.aex.android.tasks.BaseTask
 import com.pqixing.aex.model.ModuleEx
 import com.pqixing.aex.utils.setting
 import com.pqixing.tools.FileUtils
+import com.pqixing.tools.TextUtils
 import java.io.File
 
 open class ToMavenTask : BaseTask() {
@@ -96,7 +97,7 @@ open class ToMavenTask : BaseTask() {
      * @return 返回结果 0,uncheckType, <0 , request check
      */
     private fun check(request: Boolean, type: String, msg: String) {
-        if(!request) return
+        if (!request) return
         if (unCheck.contains(type)) set.println(msg) else set.writeResult(msg, true)
     }
 
@@ -114,11 +115,15 @@ open class ToMavenTask : BaseTask() {
 
 
     override fun runTask() {
-            //假上传
+        //假上传
         Thread.sleep(1000)
         if (fakeUpload) set.println("Fake upload task , version will not change")
         //更新本地版本信息
         set.vm.loadVersionFile(true)
+
+        //打印出上传的地址
+        val url = TextUtils.append(arrayOf(forMaven.url, forMaven.group.replace(".", "/"), forMaven.artifactId, forMaven.version))
+        set.println("upload to : $url")
         set.writeResult(resultStr)
     }
 }

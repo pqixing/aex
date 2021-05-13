@@ -77,7 +77,7 @@ open class XSetting : Plugin<Settings> {
         }
 
 
-        setting.gradle.addListener(object : BuildAdapter() {
+        gradle.addListener(object : BuildAdapter() {
             override fun buildFinished(result: BuildResult) {
                 manifest.projects.mapNotNull { it as? ProjectEx }.forEach { gitHelper.close(it.repo) }
                 plugins.clear()

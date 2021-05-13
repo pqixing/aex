@@ -40,7 +40,7 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
     val rename: JCheckBox = JCheckBox("rename", null, false).also {
         it.addChangeListener { e ->
             tvDirName.isVisible = !it.isSelected
-            val r: Rectangle = content.bounds
+            val r: Rectangle = center.bounds
             centerPanal.repaint(r.x, r.y, r.width, r.height)
         }
     }
@@ -90,7 +90,7 @@ open class XProjectDialog(e: AnActionEvent) : XEventDialog(e, e.project ?: Proje
         tvDirName.text = "/" + tvGitUrl.text.trim().substringAfterLast("/").substringBefore(".")
     }
 
-    override fun getTitleStr(): String = "Open AEX Project"
+    override fun getTitleStr(): String = "Open Project"
     override fun doOKAction() {
         val path = tvDir.text.trim()
         val url = tvGitUrl.text.trim()

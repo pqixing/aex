@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".DoorActivity">
+
+    <ImageView
+        android:id="@+id/ivFilter"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:padding="8dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_menu_filter" />
+
+    <EditText
+        android:id="@+id/etSearch"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/ivFilter"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:autofillHints="@string/input_filter_key"
+        android:hint="@string/input_filter_key"
+        android:inputType="text"
+        android:textSize="16sp"
+        android:padding="5dp" />
+
+    <ListView
+        android:id="@+id/lvClass"
+        android:layout_below="@+id/etSearch"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="#EEEEEE"
+        android:dividerHeight="1dp" />
+
+
+</RelativeLayout>

@@ -5,7 +5,10 @@
     <constraints>
       <xy x="20" y="20" width="780" height="400"/>
     </constraints>
-    <properties/>
+    <properties>
+      <minimumSize width="-1" height="-1"/>
+      <preferredSize width="-1" height="35"/>
+    </properties>
     <border type="none"/>
     <children>
       <component id="b1a11" class="javax.swing.JLabel">
@@ -25,7 +28,7 @@
       </vspacer>
       <component id="484a9" class="javax.swing.JComboBox" binding="cbBrn">
         <constraints>
-          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false">
+          <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="230" height="-1"/>
           </grid>
         </constraints>
@@ -46,29 +49,16 @@
           <toolTipText value="select git cmd to exe"/>
         </properties>
       </component>
-      <grid id="7f427" binding="customPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+      <grid id="7f427" binding="cstPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
         <constraints>
-          <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="3" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="3" row-span="1" col-span="2" vsize-policy="3" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <visible value="false"/>
+          <visible value="true"/>
         </properties>
         <border type="none"/>
-        <children>
-          <component id="63a0b" class="javax.swing.JButton" binding="btnPreview">
-            <constraints border-constraint="East"/>
-            <properties>
-              <text value="view"/>
-              <toolTipText value="preview command for select item"/>
-            </properties>
-          </component>
-        </children>
+        <children/>
       </grid>
-      <hspacer id="30b7f">
-        <constraints>
-          <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-        </constraints>
-      </hspacer>
     </children>
   </grid>
 </form>

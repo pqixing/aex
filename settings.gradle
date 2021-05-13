@@ -10,9 +10,6 @@ aex {
         psw = "input_you_psw"
         group = "script/thirs"
     }
-    types {
-        runs.clear()
-    }
 
     maven("pqixing") {
         url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
@@ -39,6 +36,7 @@ aex {
         }
         module("aex", "Gradle 插件", "JAVA") {
             api("tools")
+
         }
         module("tools", "基础模块定义", "JAVA") {
             path = "libs/tools"
@@ -53,9 +51,7 @@ aex {
 buildscript {
     ext.aex_local = false
     repositories { maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' } }
-//    repositories { maven { url 'https://dl.bintray.com/pqixing86/aex' } }
-//    dependencies { classpath 'com.pqixing.aex:module:1.1.6' }
-//   dependencies { classpath 'io.github.pqixing:aex:1.0' }
     //依赖本地调试
-    repositories { maven { url uri("$rootDir.absolutePath/libs/repo") } }; dependencies { classpath "com.pqixing.local:aex:+" }
+//    repositories { maven { url uri("$rootDir.absolutePath/libs/repo") } }; dependencies { classpath "com.pqixing.local:aex:+" }
+    repositories { maven { url "http://artifactory.intra.xiaojukeji.com/artifactory/libs-release/" } }; dependencies { classpath "com.didi.dchat:aex:+" }
 }

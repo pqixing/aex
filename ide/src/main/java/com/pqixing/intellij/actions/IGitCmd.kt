@@ -27,10 +27,16 @@ abstract class IGitCmd(val dialog: XGitDialog, val name: String) {
 class Custom(dialog: XGitDialog, val gitCmd: GitCommand) : IGitCmd(dialog, gitCmd.name()) {
     override fun before(br: String, items: List<XItem>): Boolean {
         var enable = false
-        val cmdStr = dialog.tvCustomParam.text.trim()
+        val cmdStr = dialog.tvCommand.text.trim()
         XApp.invoke(true) {
-            enable = Messages.OK == Messages.showOkCancelDialog(
-                dialog.project, "Make sure you want to run : \n git ${gitCmd.name()} $cmdStr", "Warning", "OK", "Cancel", null
+
+            val cmds = items.map {
+                "${it.title}  : \n " + cmdStr.replace("\$target", br).replace("\$name", it.title)
+                    .replace("\$branch", it.get<GitRepository>(KEY_REPO)?.currentBranchName ?: "")
+            }
+
+            enable = Messages.OK == Messages.showDialog(
+                dialog.project, cmds.joinToString("\n"), "git $gitCmd :", arrayOf("OK", "Cancel"),0, null
             )
         }
         return enable

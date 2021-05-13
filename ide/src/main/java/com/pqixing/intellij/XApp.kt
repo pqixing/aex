@@ -32,8 +32,8 @@ object XApp {
     private val exeTimes = hashMapOf<String, Long>()
     private val enables = hashMapOf<String, Boolean>()
     val maps: Properties by lazy { FileUtils.readProperties(File(cacheDir(), "share.xml")) }
-    private val BALLOON: NotificationGroup by lazy { notificationGroup(true) }
-    private val LOG: NotificationGroup by lazy { notificationGroup(false) }
+    val BALLOON: NotificationGroup by lazy { notificationGroup(true) }
+    val LOG: NotificationGroup by lazy { notificationGroup(false) }
 
     /**
      * 检查当前是否是ex项目
@@ -43,6 +43,7 @@ object XApp {
             XHelper.ideImportFile(project?.basePath ?: "").exists()
         }
     }
+
 
     /**
      * 检查当前是否有更新
@@ -129,6 +130,21 @@ object XApp {
 
     fun String.getSp(default: String? = null, project: Project? = null) =
         if (maps.containsKey(real(this, project))) maps[real(this, project)] else default
+
+
+    fun String.getSpList(default: String? = null, project: Project?): List<String> =
+        this.getSp(default, project)?.toString()?.split(",")?.filter { it.isNotEmpty() } ?: emptyList()
+
+    fun String.putSpList(insert: List<String>, project: Project? = null, removeSame: Boolean = true): List<String> {
+        val list = this.getSpList(null, project).toMutableList()
+        if (removeSame) {
+            list.removeAll(insert)
+        }
+        list.addAll(0, insert)
+        this.putSp(list.joinToString(","), project)
+        return list
+    }
+
 
     fun real(key: String, project: Project?): String = key + (project?.basePath?.hashCode()?.toString() ?: "")
     fun <T> Boolean?.getOrElse(get: T, e: T) = if (this == true) get else e

@@ -15,7 +15,8 @@ class SourceCreate(val XSetting: XSetting, val manifest: ManifestX) {
     fun tryCreateSrc(module: ModuleX) {
         //非Android工程不生成代码
         if (module.typeX().java()) createJavaSrc(module)
-        if (module.typeX().android()) createAndroidSrc(module)
+        //flutter项目不生产模板
+        if (module.typeX().android() && !module.typeX().flutter()) createAndroidSrc(module)
     }
 
     private fun createJavaSrc(module: ModuleX) {
@@ -61,7 +62,7 @@ class SourceCreate(val XSetting: XSetting, val manifest: ManifestX) {
         val className = "${name}App"
         val packageName = groupName.replace(".", "/") + "/" + name.toLowerCase(Locale.CHINA)
         FileUtils.writeText(
-            File(sourceDir, "resources/values/strings.xml").takeIf { !it.exists() },
+            File(sourceDir, "res/values/strings.xml").takeIf { !it.exists() },
             "<resources>\n<string name=\"library_name\">${module.name}</string> \n</resources>"
         )
         FileUtils.writeText(

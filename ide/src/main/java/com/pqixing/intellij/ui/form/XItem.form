@@ -7,32 +7,14 @@
     <properties/>
     <border type="etched"/>
     <children>
-      <grid id="6e346" layout-manager="BorderLayout" hgap="5" vgap="0">
-        <constraints border-constraint="West"/>
-        <properties/>
-        <border type="none"/>
-        <children>
-          <component id="c9f94" class="javax.swing.JCheckBox" binding="cbSelect">
-            <constraints border-constraint="West"/>
-            <properties>
-              <hideActionText value="false"/>
-              <selected value="false"/>
-              <text value=""/>
-            </properties>
-          </component>
-          <component id="a159a" class="javax.swing.JLabel" binding="tvTitle">
-            <constraints border-constraint="Center"/>
-            <properties>
-              <alignmentX value="0.5"/>
-              <horizontalAlignment value="2"/>
-              <horizontalTextPosition value="11"/>
-              <iconTextGap value="4"/>
-              <preferredSize width="160" height="0"/>
-              <text value=""/>
-            </properties>
-          </component>
-        </children>
-      </grid>
+              <component id="c9f94" class="javax.swing.JCheckBox" binding="tvTitle">
+                  <constraints border-constraint="West"/>
+                <properties>
+                  <hideActionText value="false"/>
+                  <selected value="false"/>
+                  <text value=""/>
+                </properties>
+              </component>
       <component id="124f8" class="javax.swing.JLabel" binding="tvContent">
         <constraints border-constraint="Center"/>
         <properties>

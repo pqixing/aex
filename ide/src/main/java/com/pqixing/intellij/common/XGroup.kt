@@ -22,7 +22,7 @@ class XGroup : DefaultActionGroup() {
         super.update(e)
         e.presentation.isEnabled = true
         e.presentation.isVisible = XApp.isExProject(e.project, true)
-        e.presentation.icon = if (XApp.isRepoUpdate(e.project, true)) AllIcons.Actions.Refresh else null
+        e.presentation.icon = if (XApp.isRepoUpdate(e.project, true)) AllIcons.Plugins.Downloads else null
 
 //        (ActionManager.getInstance().getAction("DeviceAndSnapshotComboBox") as DeviceAndSnapshotComboBoxAction).getSelectedDevice(e.project!!)
         //启动后，尝试打开socket连接，接收gradle插件的通知

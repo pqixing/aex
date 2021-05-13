@@ -14,16 +14,7 @@ class TaskPopParam(val key: String, val project: Project, val dialog: XDialog) {
 
     val locals = ModuleManager.getInstance(project).modules.map { it.realName() }
 
-    /**
-     * 本地文件映射
-     */
-    var mapping: String = "param_mapping_$key"
-        get() = field.getSp("", project).toString()
-        set(value) {
-            field.putSp(value, project)
-        }
-
-    var custom: String = "param_custom_$key"
+    var params: String = "param_custom_$key"
         get() = field.getSp("", project).toString()
         set(value) {
             field.putSp(value, project)
@@ -36,7 +27,7 @@ class TaskPopParam(val key: String, val project: Project, val dialog: XDialog) {
             field.putSp(value, project)
         }
 
-    var loadAll = false
+    var outside = false
         set(value) {
             field = value
             dialog.adapter().datas().forEach { it.visible = value || locals.contains(it.title) }
@@ -52,19 +43,16 @@ class TaskPopParam(val key: String, val project: Project, val dialog: XDialog) {
         install = showInputDialog("Apk Install Param", "input adb install param", install)
     }
 
-    fun getGradleParams(): Map<String, String> {
-        return custom.split(",").filter { it.contains(":") }.associate { it.substringBefore(":") to it.substringAfter(":") }
+    fun getGradleParams(): String {
+        return params
     }
 
     fun getActions(): List<PopOption<String>> {
         return listOf(
-            PopOption("", "AllView", " show all module", loadAll) { loadAll = it },
-            PopOption("", "Params", custom.ifEmpty { "input gradle params" }, custom.isNotEmpty()) {
-                custom = showInputDialog("Gradle Params", "input map of gradle task, etc: xx:11,yy:22", custom)
+            PopOption("", "outside", " show outside module", outside) { outside = it },
+            PopOption("", "params", params.ifEmpty { "input gradle params" }, params.isNotEmpty()) {
+                params = showInputDialog("Gradle Params", "input params for  gradle task, etc: --no-deamon -Dlog=true", params)
             },
-            PopOption("", "Mapping", mapping.ifEmpty { "input mapping path" }, mapping.isNotEmpty()) {
-                mapping = showInputDialog("Mapping Path", "input version mapping file path", mapping)
-            }
         )
     }
 

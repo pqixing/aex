@@ -64,7 +64,7 @@ open class IndexRepoDialog(e: AnActionEvent) : XModuleDialog(e) {
         jbTarget.isEnabled = enable
     }
 
-    override fun getTitleStr(): String = "Indexing : ${manifest.branch}"
+    override fun getTitleStr(): String = "Indexing"
     override fun doOKAction() {
         super.doOKAction()
         val opts = BrOpts()
@@ -77,7 +77,7 @@ open class IndexRepoDialog(e: AnActionEvent) : XModuleDialog(e) {
 
     private fun toIndex(opts: BrOpts) {
         val envs = mutableMapOf("include" to "null", "opts" to opts.toString())
-        GradleRequest(listOf("IndexRepo"), envs).runGradle(project) {
+        GradleRequest(listOf("IndexRepo"), envs).executeTasks(project) {
             if (it.success) XApp.invoke {
                 FileEditorManager.getInstance(project).openFile(VfsUtil.findFileByIoFile(File(it.getDefaultOrNull() ?: ""), true)!!, true)
             }

@@ -13,7 +13,8 @@ class TypeX(name: String) : IType(name) {
         private const val APP = "APP"
         private const val DOC = "DOC"
         private const val LIBRARY = "LIBRARY"
-        fun items() = arrayOf(ROOT, DOC, JAVA, APP, LIBRARY)
+        private const val FLUTTER = "FLUTTER"
+        fun items() = arrayOf(ROOT, DOC, JAVA, APP, LIBRARY, FLUTTER)
     }
 
     fun root() = ROOT == name
@@ -21,24 +22,32 @@ class TypeX(name: String) : IType(name) {
     fun doc() = DOC == name
     fun app() = APP == name
     fun library() = LIBRARY == name
-    fun android() = app() || library()
+    fun flutter() = FLUTTER == name
+    fun android() = app() || library() || flutter()
 
     init {
 
-        merge("root", "script/${name.toLowerCase(Locale.CHINA)}.gradle")
+        merge("root", "script/${name.lowercase(Locale.CHINA)}.gradle")
         if (name == "ROOT") {
             ignores.add("local.gradle")
         }
-        if (name == "LIBRARY") {
-            runs.add("io.github.pqixing:launch:+")
-        }
 
-        if (name == "APP" || name == "LIBRARY") {
+        mockRun("com.didi.dchat:door:+")
+
+        if (android()) {
             replaces.add("apply *?plugin *?: *?['\"]com.android.(application|library)['\"]")
             merge("root", "script/android.gradle")
         }
+
         merge("root", "script/maven.gradle")
         merge("module", "build.gradle")
+    }
+
+    fun ignore(module: String){
+        ignores.add(module)
+    }
+    fun mockRun(module: String) {
+        mockRuns.add(module)
     }
 
     fun merge(type: String, path: String) {
