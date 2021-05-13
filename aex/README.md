@@ -1,6 +1,8 @@
 [AEX](https://github.com/pqixing/aex) - [GRADLE](https://plugins.jetbrains.com/plugin/16145-aex) : 配置文档
 ---------
-> GRADLE插件详细配置说明文档
+> GRADLE插件详细配置说明文档<br>
+> 更多文档: UI操作文档: [AEX_GUI](https://github.com/pqixing/aex/blob/main/ide/README.md) ;  <span id="framework">架构文档</span>: [AEX](https://github.com/pqixing/aex)
+
 
 ## 集成aex插件
 
@@ -127,9 +129,3 @@ aex{
 +    fun asModule(type: String): ModuleX
 +    fun asModule(type: String, closure: Closure<*>): ModuleX
 +    fun modules(closure: Closure<*>)
-
-
-
-### 其他文档
-+ GUI使用文档: [AEX-IDE](https://github.com/pqixing/aex/blob/main/studio/README.md)
-+ 配置文档: [AEX-GRADLE](https://github.com/pqixing/aex/blob/main/module/README.md)
