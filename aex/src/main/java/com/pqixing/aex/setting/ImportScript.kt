@@ -42,6 +42,12 @@ class ImportScript(val manifest: ManifestX, val set: XSetting) {
         }
         //尝试下载工程,hook build.gradle文件,//添加include配置
         val checkouts = imports.filter { checkoutModule(it, manifest.branch) }
+        val checkFails = (imports - checkouts)
+        if (checkFails.isNotEmpty()) {
+            set.writeResult("Checkout module fail : ${checkFails.joinToString(",") { it.name }}", true)
+        }
+
+        //初始化仓库版本,方便日志打印
         val initVM = set.vm.name
         set.println("--------------------------------- Start Import : ${checkouts.map { it.name }} --------------------------------- ")
 
@@ -95,14 +101,15 @@ class ImportScript(val manifest: ManifestX, val set: XSetting) {
             }
         }
 
+        if (module.reqDps()) {
+            set.println("        depend : ${moduleDir.absolutePath}/build/${manifest.config.build}/${XKeys.GRADLE_DEPENDENCIES}")
+        }
+
         val merges = files.filter { it.exists() && it.isFile }.distinctBy { it.absolutePath }
         if (merges.isNotEmpty()) {
             val result = File(moduleDir, buildFileName(module.name))
             FileUtils.mergeFile(result, merges) { replace(it, type.replaces.map { m -> Regex(m) }) }
             set.println("        merge  : ${result.absolutePath} <-  ${getPath(merges)} ")
-        }
-        if (module.reqDps()) {
-            set.println("        depend : ${moduleDir.absolutePath}/build/${manifest.config.build}/${XKeys.GRADLE_DEPENDENCIES}")
         }
     }
 
@@ -153,6 +160,7 @@ class ImportScript(val manifest: ManifestX, val set: XSetting) {
         val forMmaven = m.ex(module.name, version = "", group = module.group(), psw = m.psw.real())
         module.localEx = LocalEx(git, git.repository.branch, forMmaven, DependManager(set, module), last)
 
+        set.println("        commit : ${last?.name()} , ${last?.authorIdent} , ${last?.fullMessage?.trim()}")
         if (module.localEx().branch != manifest.branch && manifest.usebr) {
             set.println("::: ${module.name} branch is ${module.localEx().branch} , does not match ${manifest.branch}!!!")
         }

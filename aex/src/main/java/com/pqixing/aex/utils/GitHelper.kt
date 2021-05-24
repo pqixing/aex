@@ -2,9 +2,6 @@ package com.pqixing.aex.utils
 
 import com.jcraft.jsch.Session
 import com.pqixing.aex.setting.XSetting
-import com.pqixing.base64Decode
-import com.pqixing.base64Encode
-import com.pqixing.hash
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.real
 import com.pqixing.tools.FileUtils
@@ -25,17 +22,19 @@ class GitHelper(val set: XSetting) {
         if (gitDir.exists()) FileUtils.delete(gitDir)
 
         val gitInfo = module.project.git
-        var url = module.project.getGitUrl()
+        val url = module.project.getGitUrl()
         set.println("JGIT start clone : $url")
-        val git: Git? = Git.cloneRepository().setURI(url).setDirectory(gitDir)
+        var git: Git? = Git.cloneRepository().setURI(url).setDirectory(gitDir)
             .setTransportConfigCallback(transportConfigCallback)
             .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, gitInfo.psw.real()))
             .setProgressMonitor(PercentProgress(set))
-            .exe("clone $url ${gitDir.name} && cd ${gitDir.name}", gitDir.parentFile) ?: open(gitDir)
+            .exe("clone $url ${gitDir.name}", gitDir.parentFile)
 
         //暂停100毫秒
         Thread.sleep(100)
-        checkout(git, branch, true, module)
+
+        git = git ?: open(gitDir)
+        checkout(git, branch, false, module)
         return git
 
     }
@@ -98,7 +97,7 @@ class GitHelper(val set: XSetting) {
             val call = git.pull()
                 .setTransportConfigCallback(transportConfigCallback)
                 .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, gitInfo.psw.real()))
-                .exe("pull")
+                .exe("pull", module.absDir())
             val isSuccessful = call?.isSuccessful ?: false
             set.println(
                 "Pull ${git.repository.directory.parentFile.name} Complete-> $isSuccessful  ${
@@ -161,7 +160,7 @@ class GitHelper(val set: XSetting) {
     /**
      * 检查分支是否一致
      */
-    fun checkout(git: Git?, branchName: String, focusCheckOut: Boolean, module: ModuleX): Boolean {
+    fun checkout(git: Git?, branchName: String, pull: Boolean, module: ModuleX): Boolean {
         git ?: return false
         //在同一个分支，不处理
         if (branchName == git.repository.branch) return true
@@ -169,24 +168,19 @@ class GitHelper(val set: XSetting) {
         //将本地修改文件存到暂存区
         if (!isClean) git.stashCreate().exe("stash")
 
-        var remote = false
-        var tryCheckOut = tryCheckOut(git, branchName, git.branchList().call(), remote)
-        if (!tryCheckOut) {
-            remote = true
+        var tryCheckOut = tryCheckOut(git, branchName, git.branchList().call(), false)
+                || tryCheckOut(git, branchName, git.branchList().setListMode(ListBranchCommand.ListMode.REMOTE).call(), true)
+
+        if (!tryCheckOut && pull) {
             //本地没有分支时，先尝试更新一下，然后再进行处理
             pull(git, module)
-            tryCheckOut = tryCheckOut(
-                git,
-                branchName,
-                git.branchList().setListMode(ListBranchCommand.ListMode.REMOTE).call(),
-                remote
-            )
+            tryCheckOut = tryCheckOut(git, branchName, git.branchList().setListMode(ListBranchCommand.ListMode.REMOTE).call(), true)
         }
+
         //还原本地的代码
-        if (!isClean && !focusCheckOut) git.stashApply().exe("stash pop")
+        if (!isClean) git.stashApply().exe("stash pop")
 
         if (!tryCheckOut) set.println("Can not find branch: $branchName ")
-
 
         return tryCheckOut
     }
@@ -219,7 +213,7 @@ class GitHelper(val set: XSetting) {
                         .setUpstreamMode(CreateBranchCommand.SetupUpstreamMode.SET_UPSTREAM)
                 }
                 command.exe("checkout $branchName")
-                set.println("Checkout ${git.repository.directory.parentFile.name}-> ${if (remote) "remote" else "local"} branch $branchName")
+                set.println("        checkout ${git.repository.directory.parentFile.name}-> ${if (remote) "remote" else "local"} branch $branchName")
                 return git.repository.branch == branchName//是否切换成功
             }
         }
