@@ -138,7 +138,7 @@ class DependManager(var set: XSetting, val module: ModuleEx) {
      * 检查是否存在其他分支的版本，如果存在，添加到exclude中
      */
     private fun addBranchExclude(groupId: String, name: String) {
-        if (set.vm.checkBranchVersion(groupId, name)) {
+        if (set.vm.findCompileVersion(groupId, name, "") != null) {
             excludes.add("${groupId}:${name}")
         }
     }
