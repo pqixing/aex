@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.pqixing.aex</id>
     <name>AEX</name>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <vendor email="pqixing86@gmail.com" url="https://github.com/pqixing/aex">pqixing
     </vendor>
 
@@ -20,8 +20,7 @@
     </description>
 
     <change-notes>
-        Support maven credentials
-        Add more description
+        Fix bug
     </change-notes>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->

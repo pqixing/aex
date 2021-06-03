@@ -54,15 +54,7 @@
           <visible value="false"/>
         </properties>
         <border type="none"/>
-        <children>
-          <component id="63a0b" class="javax.swing.JButton" binding="btnPreview">
-            <constraints border-constraint="East"/>
-            <properties>
-              <text value="view"/>
-              <toolTipText value="preview command for select item"/>
-            </properties>
-          </component>
-        </children>
+        <children/>
       </grid>
       <hspacer id="30b7f">
         <constraints>

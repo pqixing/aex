@@ -1,9 +1,13 @@
 package com.pqixing.intellij.actions
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.ui.TextFieldWithAutoCompletion
 import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.labels.LinkLabel
+import com.intellij.ui.components.labels.LinkListener
+import com.intellij.ui.scale.JBUIScale
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.XApp.getOrElse
 import com.pqixing.intellij.XApp.getSp
@@ -20,16 +24,14 @@ import com.pqixing.model.impl.ProjectX
 import git4idea.GitUtil
 import git4idea.commands.GitCommand
 import git4idea.repo.GitRepository
+import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Point
 import java.awt.event.ActionListener
 import java.io.File
 import java.lang.reflect.Modifier
-import javax.swing.JButton
-import javax.swing.JComboBox
-import javax.swing.JComponent
-import javax.swing.JPanel
+import javax.swing.*
 
 open class XGitAction : XEventAction<XGitDialog>()
 class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
@@ -43,7 +45,6 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
     private lateinit var cbBrn: JComboBox<String>
     private lateinit var cbOp: JComboBox<IGitCmd>
     private lateinit var customPanel: JPanel
-    private lateinit var btnPreview: JButton
     lateinit var tvCustomParam: TextFieldWithAutoCompletion<String>
 
     var customModel = SP_LAST_GIT_MODEL.getSp("N", project).toString() == "Y"
@@ -64,8 +65,15 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
         tvCustomParam = TextFieldWithAutoCompletion.create(project, lastCmds, true, lastCmds.firstOrNull() ?: "")
         tvCustomParam.setPreferredWidth(180)
         tvCustomParam.toolTipText = "Env:\$target , \$name , \$branch"
-        customPanel.add(tvCustomParam, 0)
-        btnPreview.addActionListener { customPreview(customPanel) }
+
+        customPanel.add(tvCustomParam,BorderLayout.CENTER)
+        val preview = LinkLabel<String>("  view", AllIcons.General.LinkDropTriangle) { c, d -> customPreview(customPanel) }.apply {
+            iconTextGap = JBUIScale.scale(1)
+            horizontalAlignment = SwingConstants.LEADING
+            horizontalTextPosition = SwingConstants.LEADING
+        }
+        customPanel.add(preview,BorderLayout.EAST)
+
         XApp.syncVcs(project, manifest.projects, true, false)
     }
 
@@ -81,7 +89,7 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
             PopOption(it, it.title, cmdStr, true) { s -> it.select = s }
         }
         val pop = XListPopupImpl(project, "", options) { _, _, _ -> }
-        pop.setMinimumSize(Dimension(btnPreview.width-8, 0))
+        pop.setMinimumSize(Dimension(btnPreview.width - 8, 0))
         pop.show(RelativePoint(btnPreview, Point(3, btnPreview.height)))
     }
 
@@ -142,8 +150,9 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
                 lastCmds.add(0, cmdStr)
                 SP_CMDS.putSp(lastCmds.joinToString(","), project)
                 SP_LAST_GIT_OP.putSp(gitOp.name, project)
-                SP_LAST_GIT_MODEL.putSp(customModel.getOrElse("Y", "N"), project)
             }
+
+            SP_LAST_GIT_MODEL.putSp(customModel.getOrElse("Y", "N"), project)
             adapter.datas().forEach { it.state = XItem.KEY_IDLE }
             indicator.text = "Start : $gitOp"
             if (gitOp.before(selectBr, selects)) {
@@ -190,10 +199,22 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
         return brs
     }
 
+    override fun createMenus(): List<JComponent?> {
+        val custom = LinkLabel<String>("custom", if (customModel) AllIcons.Actions.Selectall else AllIcons.Actions.Unselectall) { c, d ->
+            onModeChage(!customModel)
+            c.icon = if (customModel) AllIcons.Actions.Selectall else AllIcons.Actions.Unselectall
+        }.apply {
+            iconTextGap = JBUIScale.scale(1)
+            horizontalAlignment = SwingConstants.LEADING
+            horizontalTextPosition = SwingConstants.LEADING
+        }
+
+        return listOf(custom) + super.createMenus()
+    }
+
     override fun moreActions(): List<PopOption<String>> {
         val callAction = { id: String -> ActionManager.getInstance().getAction(id).actionPerformed(e) }
         return listOf(
-            PopOption("", "Custom", "   input git cmd", customModel) { onModeChage(it) },
             PopOption("", "Pull", "   call ide pull action", false) { callAction("Vcs.UpdateProject") },
             PopOption("", "Push", "   call ide Push action", false) { callAction("Vcs.Push") }
         )
