@@ -37,9 +37,9 @@ fun String.aexDecode() = AexURLDecoder.decode(this, "utf-8")
 
 fun String.real() = if (this.startsWith("sk:")) this.substring(3).reversed().base64Decode() else this
 
-fun String.base64Encode(replace:Boolean = true) =
+fun String.base64Encode(replace: Boolean = true) =
     String(Base64.getEncoder().encode(this.toByteArray(Charsets.UTF_8)), Charsets.UTF_8).let {
-        if(replace)it.replace("=", "") else it//把末尾的等号去掉,不影响解码
+        if (replace) it.replace("=", "") else it//把末尾的等号去掉,不影响解码
     }
 
 fun String.base64Decode() =
@@ -67,14 +67,23 @@ object XHelper {
         val exludes: HashMap<String, Int> = hashMapOf()
 
         SAXParserFactory.newInstance().newSAXParser().parse(ins, object : DefaultHandler() {
-            val cache = hashMapOf<String, String>()
+            val dpCache = hashMapOf<String, String>()
+            val exCache = hashMapOf<String, String>()
             var loadDepend = false
             var nodeName: String? = null
+
+            //当前的cache
+            var cache: HashMap<String, String> = dpCache
             override fun startElement(uri: String?, localName: String?, qName: String?, attributes: Attributes?) {
                 nodeName = qName
-                if (qName == "dependency" || qName == "exclusion") {
+                if (qName == "dependency") {
                     loadDepend = true
-                    cache.clear()
+                    cache = dpCache
+                }
+                if (qName == "exclusion") {
+                    loadDepend = true
+                    cache = exCache
+                    exCache.clear()
                 }
             }
 
@@ -93,10 +102,16 @@ object XHelper {
             override fun endElement(uri: String?, localName: String?, qName: String?) {
                 nodeName = null
                 when (qName) {
-                    "dependency" -> pom.dependency.add("${cache["groupId"]}:${cache["artifactId"]}:${cache["version"]}")
+                    "dependency" -> {
+                        pom.dependency.add("${dpCache["groupId"]}:${dpCache["artifactId"]}:${dpCache["version"]}")
+                        cache.clear()
+                        loadDepend = false
+                    }
                     "exclusion" -> {
-                        val key = "${cache["groupId"]}:${cache["artifactId"]}"
+                        val key = "${exCache["groupId"]}:${exCache["artifactId"]}"
                         exludes[key] = ((exludes[key] ?: 0) + 1)
+                        cache.clear()
+                        cache = dpCache
                     }
                     "dependencies" -> loadDepend = false
                 }

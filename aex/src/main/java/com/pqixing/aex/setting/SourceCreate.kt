@@ -61,7 +61,7 @@ class SourceCreate(val XSetting: XSetting, val manifest: ManifestX) {
         val className = "${name}App"
         val packageName = groupName.replace(".", "/") + "/" + name.toLowerCase(Locale.CHINA)
         FileUtils.writeText(
-            File(sourceDir, "resources/values/strings.xml").takeIf { !it.exists() },
+            File(sourceDir, "res/values/strings.xml").takeIf { !it.exists() },
             "<resources>\n<string name=\"library_name\">${module.name}</string> \n</resources>"
         )
         FileUtils.writeText(
