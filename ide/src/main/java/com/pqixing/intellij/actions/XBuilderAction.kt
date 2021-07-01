@@ -64,7 +64,7 @@ class XBuilderAction : XEventAction<XBuilderDialog>() {
             envs["include"] = "${module},${XHelper.readManifest(project.basePath!!)?.config?.include}"
         }
 
-        GradleRequest(listOf(":${param.module}:${param.assemble}"), envs).runGradle(project) {
+        GradleRequest(listOf(":${param.module}:${param.assemble}"), envs).executeTasks(project) {
             val success = it.success
             val result = it.getDefaultOrNull() ?: ""
             param.state = if (success) XItem.KEY_SUCCESS else XItem.KEY_ERROR

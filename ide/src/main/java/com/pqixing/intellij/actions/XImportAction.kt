@@ -64,10 +64,16 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
         cbSorted.addActionListener { VCS_SORTED.putSp(cbSorted.selectedItem?.toString() ?: "Topo", project);resorted() }
         cbLocal.isSelected = config.local
         cbLog.isSelected = config.log
-        initDebug()
         tvSearch.textEditor.document.addDocumentListener(object : DocumentListener {
             fun onKeyUpdate() {
                 val key: String = tvSearch.text.trim()
+
+                //调试模式
+                if(key.startsWith("debug::")){
+                    XDebugDialog.handleDebugAction(key,project,e,tvSearch)
+                    return
+                }
+
                 for (it in adapter.datas()) {
                     it.visible = key.isEmpty() || UiUtils.match(key, listOf(it.title, it.content, it.tag))
                 }
@@ -86,21 +92,6 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
                 onKeyUpdate()
             }
         })
-    }
-
-    private fun initDebug() {
-        var debugClick = 0
-        var lastTime = 0L
-        jlTips.addMouseClick { _, _ ->
-            if (System.currentTimeMillis() - lastTime > 500L) {
-                debugClick = 0
-            }
-            lastTime = System.currentTimeMillis()
-            if (debugClick++ % 5 == 0) {
-                XDebugDialog(e).show()
-                this.dispose()
-            }
-        }
     }
 
     override fun afterInit() {

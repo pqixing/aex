@@ -32,8 +32,8 @@ object XApp {
     private val exeTimes = hashMapOf<String, Long>()
     private val enables = hashMapOf<String, Boolean>()
     val maps: Properties by lazy { FileUtils.readProperties(File(cacheDir(), "share.xml")) }
-    private val BALLOON: NotificationGroup by lazy { notificationGroup(true) }
-    private val LOG: NotificationGroup by lazy { notificationGroup(false) }
+    val BALLOON: NotificationGroup by lazy { notificationGroup(true) }
+    val LOG: NotificationGroup by lazy { notificationGroup(false) }
 
     /**
      * 检查当前是否是ex项目

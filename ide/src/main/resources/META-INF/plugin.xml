@@ -41,8 +41,6 @@
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
 
-            <action id="AEX.XDebugAction" class="com.pqixing.intellij.actions.XDebugAction" text="Debug"/>
-            <separator/>
             <action id="AEX.XImportAction" class="com.pqixing.intellij.actions.XImportAction" text="Import">
                 <keyboard-shortcut first-keystroke="ctrl alt I" keymap="$default"/>
             </action>

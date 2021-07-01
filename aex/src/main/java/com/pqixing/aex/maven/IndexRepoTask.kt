@@ -9,6 +9,7 @@ import com.pqixing.aexEncode
 import com.pqixing.model.BrOpts
 import com.pqixing.tools.FileUtils
 import com.pqixing.tools.TextUtils
+import org.eclipse.jgit.api.ListBranchCommand
 
 /**
  * 同步工程的代码和分支,为了Jekens 构建使用
@@ -40,7 +41,7 @@ open class IndexRepoTask : BaseTask() {
 //        branchs += set.vm.allVersions().keys.mapNotNull { it.split(":").firstOrNull()?.substringAfterLast(".") }
         branchs += manifest.fallbacks
         branchs += manifest.branch
-        branchs += module.localEx().git.branchList().call().map { it.name.substringAfterLast("/") }
+        branchs += module.localEx().git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call().map { it.name.substringAfterLast("/") }
         return branchs.map { it.trim() }.filter { it.isNotEmpty() }.toSet()
     }
 
