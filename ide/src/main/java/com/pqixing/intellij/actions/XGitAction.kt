@@ -6,8 +6,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.ui.TextFieldWithAutoCompletion
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.labels.LinkLabel
-import com.intellij.ui.components.labels.LinkListener
-import com.intellij.ui.scale.JBUIScale
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.XApp.getOrElse
 import com.pqixing.intellij.XApp.getSp
@@ -31,7 +29,10 @@ import java.awt.Point
 import java.awt.event.ActionListener
 import java.io.File
 import java.lang.reflect.Modifier
-import javax.swing.*
+import javax.swing.JComboBox
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
 
 open class XGitAction : XEventAction<XGitDialog>()
 class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
@@ -45,7 +46,8 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
     private lateinit var cbBrn: JComboBox<String>
     private lateinit var cbOp: JComboBox<IGitCmd>
     private lateinit var customPanel: JPanel
-    lateinit var tvCustomParam: TextFieldWithAutoCompletion<String>
+    private lateinit var jlGit: JLabel
+    lateinit var tvCommand: TextFieldWithAutoCompletion<String>
 
     var customModel = SP_LAST_GIT_MODEL.getSp("N", project).toString() == "Y"
     val listener = GitHelper.GitIndicatorListener(null)
@@ -62,23 +64,21 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
 
     override fun initWidget() {
         super.initWidget()
-        tvCustomParam = TextFieldWithAutoCompletion.create(project, lastCmds, true, lastCmds.firstOrNull() ?: "")
-        tvCustomParam.setPreferredWidth(180)
-        tvCustomParam.toolTipText = "Env:\$target , \$name , \$branch"
+        tvCommand = TextFieldWithAutoCompletion.create(project, lastCmds, true, lastCmds.firstOrNull() ?: "")
+        tvCommand.setPreferredWidth(180)
+        tvCommand.toolTipText = "Env:\$target , \$name , \$branch"
 
-        customPanel.add(tvCustomParam,BorderLayout.CENTER)
-        val preview = LinkLabel<String>("  view", AllIcons.General.LinkDropTriangle) { c, d -> customPreview(customPanel) }.apply {
-            iconTextGap = JBUIScale.scale(1)
-            horizontalAlignment = SwingConstants.LEADING
-            horizontalTextPosition = SwingConstants.LEADING
-        }
-        customPanel.add(preview,BorderLayout.EAST)
+        customPanel.add(tvCommand, BorderLayout.CENTER)
+
+        val preview = createLinkText("view", AllIcons.General.LinkDropTriangle) { customPreview(customPanel) }
+
+        customPanel.add(preview, BorderLayout.EAST)
 
         XApp.syncVcs(project, manifest.projects, true, false)
     }
 
     private fun customPreview(btnPreview: Component) {
-        val cmdParam = tvCustomParam.text.trim()
+        val cmdParam = tvCommand.text.trim()
         val gitOp = cbOp.selectedItem as IGitCmd
         val selectBr = cbBrn.selectedItem?.toString()?.trim()?.takeIf { it.isNotEmpty() } ?: "master"
         val options = adapter.datas().filter { it.visible && it.select }.map {
@@ -86,7 +86,7 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
                 .replace("\$target", selectBr)
                 .replace("\$name", it.title)
                 .replace("\$branch", it.tag ?: "")
-            PopOption(it, it.title, cmdStr, true) { s -> it.select = s }
+            PopOption(it, cmdStr, "  ->  ${it.title}", true) { s -> it.select = s }
         }
         val pop = XListPopupImpl(project, "", options) { _, _, _ -> }
         pop.setMinimumSize(Dimension(btnPreview.width - 8, 0))
@@ -144,7 +144,7 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
             val selectBr = cbBrn.selectedItem?.toString()?.trim()?.takeIf { it.isNotEmpty() } ?: "master"
             val gitOp = cbOp.selectedItem as IGitCmd
             val selects = adapter.datas().filter { it.visible && it.select }
-            val cmdStr = tvCustomParam.text.trim()
+            val cmdStr = tvCommand.text.trim()
             if (gitOp is Custom && cmdStr.isNotEmpty()) {
                 lastCmds.remove(cmdStr)
                 lastCmds.add(0, cmdStr)
@@ -200,24 +200,22 @@ class XGitDialog(e: AnActionEvent) : XModuleDialog(e) {
     }
 
     override fun createMenus(): List<JComponent?> {
-        val custom = LinkLabel<String>("custom", if (customModel) AllIcons.Actions.Selectall else AllIcons.Actions.Unselectall) { c, d ->
-            onModeChage(!customModel)
-            c.icon = if (customModel) AllIcons.Actions.Selectall else AllIcons.Actions.Unselectall
-        }.apply {
-            iconTextGap = JBUIScale.scale(1)
-            horizontalAlignment = SwingConstants.LEADING
-            horizontalTextPosition = SwingConstants.LEADING
+
+        val updateModel = { model: Boolean, c: LinkLabel<String> ->
+            onModeChage(model)
+            c.icon = if (customModel) AllIcons.Actions.Selectall else ICON_UNCHECKED
         }
 
-        return listOf(custom) + super.createMenus()
-    }
+        val custom = createLinkText("custom", ICON_UNCHECKED) { updateModel(!customModel, it) }
+        jlGit.addMouseClick { c, e -> updateModel(!customModel, custom) }
 
-    override fun moreActions(): List<PopOption<String>> {
+        updateModel(customModel, custom)
+
         val callAction = { id: String -> ActionManager.getInstance().getAction(id).actionPerformed(e) }
-        return listOf(
-            PopOption("", "Pull", "   call ide pull action", false) { callAction("Vcs.UpdateProject") },
-            PopOption("", "Push", "   call ide Push action", false) { callAction("Vcs.Push") }
-        )
+
+        val pull = createLinkText("pull", ICON_UNCHECKED) { callAction("Vcs.UpdateProject") }
+        val push = createLinkText("push", ICON_UNCHECKED) { callAction("Vcs.Push") }
+        return listOf(custom, pull, push)
     }
 
 

@@ -10,6 +10,7 @@ import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.labels.LinkLabel
 import com.intellij.ui.components.labels.LinkListener
 import com.intellij.ui.scale.JBUIScale
+import com.intellij.util.ui.EmptyIcon
 import com.pqixing.XHelper
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.ui.adapter.XBaseAdapter
@@ -26,7 +27,6 @@ import java.awt.Font
 import java.awt.Point
 import java.awt.Rectangle
 import java.awt.event.KeyEvent
-import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.border.TitledBorder
@@ -143,6 +143,10 @@ open class XEventDialog(val e: AnActionEvent, project: Project = e.project!!, va
 
 open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
 
+    companion object{
+        val ICON_UNCHECKED = EmptyIcon.create(16)
+    }
+
     protected var adapter: XBaseAdapter
     protected lateinit var content: JScrollPane
     protected lateinit var center: JPanel
@@ -153,7 +157,7 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
         adapter = XBaseAdapter(center)
         content.addMouseClick { c, e -> showOperator(c, e) }
         content.verticalScrollBar.unitIncrement = 10
-        border.titleFont = Font("title",Font.BOLD,14)
+        border.titleFont = Font("title", Font.BOLD, 14)
         isModal = false
     }
 
@@ -235,18 +239,21 @@ open class XDialog(var project: Project) : DialogWrapper(project, true, false) {
     }
 
     protected open fun createMenus(): List<JComponent?> {
-
-        val onLinkClick = LinkListener<String> { c, d ->
+        val more = createLinkText("more", AllIcons.General.LinkDropTriangle) { c ->
             val moreActions = moreActions()
-            if (moreActions.isEmpty()) return@LinkListener
-            XListPopupImpl(project, "", moreActions).show(RelativePoint(c, Point(0, c.height + 10)))
+            if (moreActions.isNotEmpty()) {
+                XListPopupImpl(project, "", moreActions).show(RelativePoint(c, Point(0, c.height + 10)))
+            }
         }
-        val more = LinkLabel("more", AllIcons.General.LinkDropTriangle, onLinkClick).apply {
+        return listOf(more)
+    }
+
+    protected open fun createLinkText(text: String, icon: Icon?, click: (c: LinkLabel<String>) -> Unit): LinkLabel<String> {
+        return LinkLabel(text, icon, LinkListener<String> { c, d -> click(c) }).apply {
             iconTextGap = JBUIScale.scale(1)
             horizontalAlignment = SwingConstants.LEADING
             horizontalTextPosition = SwingConstants.LEADING
         }
-        return listOf(more)
     }
 
     final override fun createDoNotAskCheckbox(): JComponent? {

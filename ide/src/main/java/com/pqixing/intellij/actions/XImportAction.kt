@@ -52,7 +52,6 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
     private lateinit var tvSearch: SearchTextField
     private lateinit var cbLocal: JCheckBox
     private lateinit var cbLog: JCheckBox
-    private lateinit var jlTips: JLabel
     private lateinit var cbSorted: JComboBox<String>
 
     override fun getTitleStr(): String = "Import : ${manifest.branch}"
@@ -234,7 +233,7 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
 
     override fun moreActions(): List<PopOption<String>> {
         return listOf(
-            PopOption("", "Vcs", "add git path to ide auto", VCS_KEY.getSp("Y", project) == "Y") { VCS_KEY.putSp(it.getOrElse("Y", "N"), project) },
+            PopOption("", "vcs", "add git path to ide auto", VCS_KEY.getSp("Y", project) == "Y") { VCS_KEY.putSp(it.getOrElse("Y", "N"), project) },
             PopOption("", "local.gradle", "open local file", false) { XApp.openFile(project, File(basePath, "local.gradle")) },
             PopOption("", "settings.gradle", "open local file", false) { XApp.openFile(project, File(basePath, "settings.gradle")) },
         )

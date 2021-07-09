@@ -4,17 +4,19 @@ import com.intellij.openapi.project.Project
 
 data class GradleRequest(
     val tasks: List<String>,
-    val env: Map<String, String> = emptyMap()
+    val env: Map<String, String> = emptyMap(),
+    val param: String = ""
 ) {
 
     fun getVmOptions(): String {
         val env = mapOf("include" to "", "local" to "false", "build" to "ide").plus(this.env)
 
-        val option = StringBuilder()
+        val option = StringBuilder("  $param  ")
 
         for (it in env.filter { it.key.isNotEmpty() && it.value.isNotEmpty() }) {
             option.append("-D${it.key}=\"${it.value}\" ")
         }
+
         return option.toString()
     }
 

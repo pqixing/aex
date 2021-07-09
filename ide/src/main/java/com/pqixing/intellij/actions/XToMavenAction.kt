@@ -51,7 +51,7 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
     private fun initConditions() {
         val onSelectChange = { s: Boolean ->
             var newItem = conditions.filter { it.selected }.joinToString(" , ") { it.title }
-            if(newItem.isEmpty()){
+            if (newItem.isEmpty()) {
                 newItem = "   ------  "
             }
             cbCondition.removeAllItems()
@@ -92,12 +92,12 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
     /**
      * 开始上传代码
      */
-    private fun startToMaven(item: XItem, ignore: String, mapping: String, gradleParam: Map<String, String>) {
+    private fun startToMaven(item: XItem, ignore: String, gradleParam: String) {
         isOKActionEnabled = false
         item.state = XItem.KEY_WAIT
         GradleRequest(
             listOf(":${item.title}:ToMaven"),
-            mapOf("include" to item.title, "local" to "false", "ignore" to ignore, "mapping" to mapping) + gradleParam
+            mapOf("include" to item.title, "local" to "false", "ignore" to ignore), gradleParam
         ).executeTasks(project) { result ->
             if (!result.success) {
                 item.state = XItem.KEY_ERROR
@@ -108,7 +108,7 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
                     "ToMaven Fail",
                     msg,
                     NotificationType.WARNING,
-                    listOf(XNotifyAction("Retry") { startToMaven(item, ignore, mapping, gradleParam) })
+                    listOf(XNotifyAction("Retry") { startToMaven(item, ignore, gradleParam) })
                 )
                 return@executeTasks
             }
@@ -117,7 +117,7 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
             item.select = false
 
             val next = adapter.datas().find { it.select && it.visible }
-            if (next != null) return@executeTasks XApp.invoke { startToMaven(next, ignore, mapping, gradleParam) }
+            if (next != null) return@executeTasks XApp.invoke { startToMaven(next, ignore, gradleParam) }
 
             isOKActionEnabled = true
             XApp.notify(project, "ToMaven Finish", "")
@@ -134,7 +134,7 @@ class XToMavenDialog(e: AnActionEvent) : XModuleDialog(e) {
         isOKActionEnabled = false
         val condition = conditions.filter { it.selected }.joinToString(",") { it.option + "" }
         KEY_CONDITION.putSp(condition, project)
-        startToMaven(next, condition, helper.mapping, helper.getGradleParams())
+        startToMaven(next, condition, helper.getGradleParams())
     }
 }
 
