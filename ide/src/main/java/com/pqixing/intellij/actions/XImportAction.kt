@@ -68,7 +68,7 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
                 val key: String = tvSearch.text.trim()
 
                 //调试模式
-                if(key.startsWith("debug::")){
+                if(key.startsWith(":")){
                     XDebugDialog.handleDebugAction(key,project,e,tvSearch)
                     return
                 }

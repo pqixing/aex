@@ -11,7 +11,6 @@ import com.pqixing.intellij.XApp
 import com.pqixing.intellij.XApp.getOrElse
 import com.pqixing.intellij.XApp.getSp
 import com.pqixing.intellij.XApp.putSp
-import com.pqixing.intellij.gradle.GradleTaskListener
 import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XEventDialog
@@ -26,45 +25,26 @@ class XDebugDialog(e: AnActionEvent) : XEventDialog(e) {
     override fun createCenterPanel(): JComponent = centerPanal
 
     companion object {
-        private const val SHOW_POP = "debug::pop"
-        private const val SHOW_PANEL = "debug::panel"
+        private const val SHOW_POP = "::pop"
+        private const val SHOW_PANEL = "::panel"
 
         /**
          * 处理调试模式命令
          */
         fun handleDebugAction(cmd: String, project: Project, e: AnActionEvent, tvSearch: SearchTextField) {
-            var handle = true
             when (cmd) {
                 SHOW_POP -> showDebugPop(project, e, tvSearch)
                 SHOW_PANEL -> XDebugDialog(e).show()
-                else -> {
-                    handle = false
-                }
-            }
-            if (handle) {
-                tvSearch.text = ""
             }
         }
 
         private fun showDebugPop(project: Project, e: AnActionEvent, c: SearchTextField) {
             val optins = listOf(
-                PopOption("", "build_output", "output log to build panel view", GradleTaskListener.output) { s -> GradleTaskListener.output = s },
-                PopOption(
-                    "",
-                    "build_activate",
-                    "auto activite build panel on start task",
-                    GradleTaskListener.activate
-                ) { s -> GradleTaskListener.activate = s },
+                PopOption("", "GradleTaskOption", "custom option for gradle task execute param", "GradleTaskOption".getSp("N", project) == "Y") { s ->
+                    "GradleTaskOption".putSp(if (s) "Y" else "N", project)
+                },
             )
-
-            //右键点击,隐藏
-            val itemClick = { left: Boolean, pop: XListPopupImpl<*>, o: PopOption<*> ->
-                if (!left) {
-                    pop.dispose()
-                }
-            }
-
-            XListPopupImpl(project, "title", optins, itemClick).show(RelativePoint(c, Point(180 - c.x, 23)))
+            XListPopupImpl(project, "title", optins).show(RelativePoint(c, Point(180 - c.x, 23)))
         }
     }
 

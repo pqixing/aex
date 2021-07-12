@@ -31,12 +31,12 @@ class Custom(dialog: XGitDialog, val gitCmd: GitCommand) : IGitCmd(dialog, gitCm
         XApp.invoke(true) {
 
             val cmds = items.map {
-                "git $gitCmd " + cmdStr.replace("\$target", br).replace("\$name", it.title)
-                    .replace("\$branch", it.get<GitRepository>(KEY_REPO)?.currentBranchName ?: "") + " -> ${it.title} "
+                "${it.title}  : \n " + cmdStr.replace("\$target", br).replace("\$name", it.title)
+                    .replace("\$branch", it.get<GitRepository>(KEY_REPO)?.currentBranchName ?: "")
             }
 
             enable = Messages.OK == Messages.showDialog(
-                dialog.project, cmds.joinToString("\n"), "Prepare to execute :", arrayOf("OK", "Cancel"),0, null
+                dialog.project, cmds.joinToString("\n"), "Execute  git $gitCmd :", arrayOf("OK", "Cancel"),0, null
             )
         }
         return enable

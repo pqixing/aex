@@ -5,6 +5,7 @@ import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
 import com.intellij.openapi.project.Project
 import com.pqixing.intellij.XApp
+import com.pqixing.intellij.XApp.getSp
 import com.pqixing.intellij.XNotifyAction
 import org.jetbrains.plugins.gradle.service.task.GradleTaskManager
 import org.jetbrains.plugins.gradle.settings.DistributionType
@@ -34,15 +35,20 @@ object GradleExecute {
             tasks["android"] = execute
         }
 
-        //可以选择使用执行的编译模式和兼容模式
-        val actions = tasks.map { i ->
-            XNotifyAction("${i.key} = ${i.value}") {
-                tasks[i.key] = !i.value
+        val actions = mutableListOf<XNotifyAction>()
+        val requestAction = "GradleTaskOption".getSp("N", project) == "Y"
+        if (requestAction) {
+            //可以选择使用执行的编译模式和兼容模式
+            actions += tasks.map { i ->
+                XNotifyAction("${i.key} = ${i.value}") {
+                    tasks[i.key] = !i.value
+                    execute(project, request, callBack)
+                }
+            }
+            actions += XNotifyAction("output  = ${GradleTaskListener.output}") {
+                GradleTaskListener.output = !GradleTaskListener.output
                 execute(project, request, callBack)
             }
-        } + XNotifyAction("output  = ${GradleTaskListener.output}") {
-            GradleTaskListener.output = !GradleTaskListener.output
-            execute(project, request, callBack)
         }
         XApp.notify(
             project,
