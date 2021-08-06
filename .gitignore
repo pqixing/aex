@@ -7,4 +7,4 @@ build
 *.iml
 local.properties
 local.gradle
-script/thirs
+thirs

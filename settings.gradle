@@ -3,55 +3,52 @@ apply plugin: "com.pqixing.aex"
 aex {
     //不适用分支进行maven仓库隔离
     usebr = false
-    fallbacks(["dev", "main"])
+
+    fallbacks(["dev2.0", "main"])
+
     git("pqixing") {
         url = "https://github.com/pqixing"
         user = "pqixing@163.com"
         psw = "input_you_psw"
-        group = "script/thirs"
+        group = "thirs"
     }
 
     maven("pqixing") {
-        url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+        url = "$rootDir/build/repo"
         user = "pqx"
         psw = "input_you_psw"
         group = "io.github.pqixing"
         task = "uploadArchives"
-        anonymous = false
-        version = "1.0"
+        anonymous = true
+        version = "2.0"
     }
 
-    maven("local") {
-        url = "$rootDir.absolutePath/libs/repo"
-        user = "pqixing86"
-        psw = "input_you_psw"
-        group = "com.pqixing.local"
-        task = "uploadArchives"
-        version = "0.1"
-    }
-
-    root("aex_root", maven(aex_local ? "local" : "pqixing"), git("pqixing")) {
+    root("aex_root", maven("pqixing"), git("pqixing")) {
         module("ide", "IDE 插件", "JAVA") {
+            path = "core/ide"
             api("tools")
         }
         module("aex", "Gradle 插件", "JAVA") {
+            path = "core/aex"
             api("tools")
 
         }
         module("tools", "基础模块定义", "JAVA") {
-            path = "libs/tools"
+            path = "core/tools"
         }
-        module("door", "启动页面", "LIBRARY") {
-            path = "libs/door"
+        module("start", "启动页面", "LIBRARY") {
+            path = "core/start"
         }
     }
 }
 
 //设置插件环境
 buildscript {
-    ext.aex_local = false
-    repositories { maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' } }
+    repositories {
+        maven { url uri("$rootDir/.idea/repo") }
+        maven { url uri("$rootDir/gradle/repo") }
+        maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+    }
     //依赖本地调试
-//    repositories { maven { url uri("$rootDir.absolutePath/libs/repo") } }; dependencies { classpath "com.pqixing.local:aex:+" }
-    repositories { maven { url "http://artifactory.intra.xiaojukeji.com/artifactory/libs-release/" } }; dependencies { classpath "com.didi.dchat:aex:+" }
+    dependencies { classpath "io.github.pqixing:aex:+" }
 }

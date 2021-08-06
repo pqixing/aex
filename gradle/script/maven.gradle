@@ -1,0 +1,49 @@
+apply plugin: 'maven'
+//apply plugin: 'signing'
+
+repositories {
+    maven {
+        url forMaven.uri()
+    }
+}
+//if(true) return
+// 上传到本地代码库,此处只是新增任务，实际参数在上传时会自动修改，无需修改
+uploadArchives {
+
+    repositories {
+        mavenDeployer {
+//            beforeDeployment { deployment -> signing.signPom(deployment) }
+            repository(url: forMaven.uri()) {
+                authentication(userName: forMaven.user, password: forMaven.psw)
+            }
+            pom.groupId = forMaven.group // 组名
+            pom.artifactId = forMaven.artifactId // 插件名
+            pom.version = forMaven.version // 版本号
+            pom.name = forMaven.name
+        }
+    }
+}
+
+
+
+if (forMaven.file != null) {
+    artifacts.archives forMaven.file
+    //上传源码到仓库
+} else if (project.hasProperty("android")) { // Android libraries
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.srcDirs
+    }
+    artifacts.archives sourcesJar
+} else if (project.hasProperty("java")) { // Java libraries
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+    artifacts.archives sourcesJar
+}
+
+//signing {
+//    useGpgCmd()
+//    sign configurations.archives
+//}
