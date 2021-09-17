@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.pqixing</groupId>
+  <artifactId>tools</artifactId>
+  <version>2.1.0</version>
+  <name>351704ca1d0856a3ad89d517c3779f62fa8b7bd3:1629108910</name>
+  <dependencies>
+    <dependency>
+      <groupId>com.alibaba</groupId>
+      <artifactId>fastjson</artifactId>
+      <version>1.2.68</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

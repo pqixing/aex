@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.pqixing</groupId>
+  <artifactId>aex_root</artifactId>
+  <version>log.20210917182122.aW8uZ2l0aHViLnBxaXhpbmc6aWRlOjIuMT0w</version>
+  <packaging>txt</packaging>
+  <name></name>
+</project>
