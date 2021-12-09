@@ -6,3 +6,4 @@ out/
 
 build
 *.iml
+gradle.properties

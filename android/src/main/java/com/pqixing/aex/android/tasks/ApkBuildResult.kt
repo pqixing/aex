@@ -40,7 +40,7 @@ open class ApkBuildResult(val set: XSetting, val pro: Project) {
         findAllApk(File(pro.buildDir, "outputs/apk"), apks)
         if (apks.isEmpty()) return
 
-        val lastCreateFile = apks.maxBy { it.lastModified() } ?: return
+        val lastCreateFile = apks.maxByOrNull { it.lastModified() } ?: return
         //30秒之前的文件,过时
         if (lastCreateFile.lastModified() - System.currentTimeMillis() >= 1000 * 30) {
             return
