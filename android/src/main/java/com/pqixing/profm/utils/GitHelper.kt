@@ -1,13 +1,15 @@
-package com.pqixing.aex.utils
+package com.pqixing.profm.utils
 
-import com.jcraft.jsch.Session
-import com.pqixing.aex.setting.XSetting
 import com.pqixing.model.impl.ModuleX
+import com.pqixing.profm.setting.XSetting
 import com.pqixing.real
 import com.pqixing.tools.FileUtils
-import org.eclipse.jgit.api.*
+import org.eclipse.jgit.api.CreateBranchCommand
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.GitCommand
+import org.eclipse.jgit.api.ListBranchCommand
 import org.eclipse.jgit.lib.Ref
-import org.eclipse.jgit.transport.*
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import java.io.File
 import java.text.SimpleDateFormat
 
@@ -25,7 +27,6 @@ class GitHelper(val set: XSetting) {
         val url = module.project.getGitUrl()
         set.println("JGIT start clone : $url")
         var git: Git? = Git.cloneRepository().setURI(url).setDirectory(gitDir)
-            .setTransportConfigCallback(transportConfigCallback)
             .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, gitInfo.psw.real()))
             .setProgressMonitor(PercentProgress(set))
             .exe("clone $url ${gitDir.name}", gitDir.parentFile)
@@ -95,7 +96,6 @@ class GitHelper(val set: XSetting) {
         return try {
             val gitInfo = module.project.git
             val call = git.pull()
-                .setTransportConfigCallback(transportConfigCallback)
                 .setCredentialsProvider(UsernamePasswordCredentialsProvider(gitInfo.user, gitInfo.psw.real()))
                 .exe("pull", module.absDir())
             val isSuccessful = call?.isSuccessful ?: false
@@ -279,15 +279,5 @@ class GitHelper(val set: XSetting) {
 //    Tools.println(runGitCmd(cmd, dir))
 //    null
 //}
-
-private var sshSessionFactory: SshSessionFactory = object : JschConfigSessionFactory() {
-    override fun configure(hc: OpenSshConfig.Host, session: Session) {}
-}
-
-private var transportConfigCallback = TransportConfigCallback { transport: Transport? ->
-    if (transport is SshTransport) {
-        transport.sshSessionFactory = sshSessionFactory
-    }
-}
 
 

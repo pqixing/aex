@@ -8,7 +8,7 @@
 
 -----
 
-在主项目的settings.gradle文件中,添加 com.pqixing.aex:module插件
+在主项目的settings.gradle文件中,添加 com.pqixing.profm:module插件
 * 标准集成, 插件存放在 https://dl.bintray.com/pqixing86/aex ,同时也推到jcenter公共仓库中
 
 ```settings.gradle
@@ -18,10 +18,10 @@ buildscript {
         maven { url 'https://dl.bintray.com/pqixing86/aex' }
         maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
     }
-    dependencies { classpath 'com.pqixing.aex:module:1.0.10' }
+    dependencies { classpath 'com.pqixing.profm:module:1.0.10' }
 }
 //安装组件化模块的脚本
-apply plugin: "com.pqixing.aex"
+apply plugin: "com.pqixing.profm"
 
 aex{
  //设置当前(主项目)的名称和maven仓库和git仓库地址. 此maven和git会成为其他git项目的缺省配置
@@ -70,7 +70,7 @@ aex{
 
 
 
-#### 2.可调用的方法 : 参考 [com.pqixing.aex.model.define.IManifestEx](src/main/java/com/pqixing/aex/model/define/IManifestEx.kt)
+#### 2.可调用的方法 : 参考 [com.pqixing.profm.model.define.IManifestEx](src/main/java/com/pqixing/profm/model/define/IManifestEx.kt)
     > 以下方法均为辅助设置 aex 的属性
 
 +    fun root(name: String, maven: String, git: String, closure: Closure<*>): ProjectEx
@@ -119,7 +119,7 @@ aex{
 +   [git(IGit)](#IGit)           :  git设置配置
 +   [modules(ModuleX)](#ModuleX) :  所有的模块集合
 
-#### 2.可调用的方法 : 参考 [com.pqixing.aex.model.define.IProjectEx](src/main/java/com/pqixing/aex/model/define/IProjectEx.kt)
+#### 2.可调用的方法 : 参考 [com.pqixing.profm.model.define.IProjectEx](src/main/java/com/pqixing/profm/model/define/IProjectEx.kt)
 +    fun module(name: String): ModuleX
 +    fun module(name: String, desc: String): ModuleX
 +    fun module(name: String, desc: String, type: String): ModuleX

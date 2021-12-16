@@ -1,4 +1,4 @@
-package com.pqixing.aex.model
+package com.pqixing.profm.model
 
 import com.pqixing.model.define.IMaven
 import java.io.File

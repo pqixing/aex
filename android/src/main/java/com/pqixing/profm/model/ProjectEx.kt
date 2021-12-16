@@ -1,7 +1,7 @@
-package com.pqixing.aex.model
+package com.pqixing.profm.model
 
-import com.pqixing.aex.model.define.IProjectEx
-import com.pqixing.aex.utils.AEX
+import com.pqixing.profm.model.define.IProjectEx
+import com.pqixing.profm.utils.AEX
 import com.pqixing.model.impl.ManifestX
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.model.impl.ProjectX

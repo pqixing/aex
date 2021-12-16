@@ -1,6 +1,6 @@
-package com.pqixing.aex.android.tasks
+package com.pqixing.profm.android.tasks
 
-import com.pqixing.aex.setting.XSetting
+import com.pqixing.profm.setting.XSetting
 import com.pqixing.tools.FileUtils
 import org.gradle.api.Project
 import java.io.File

@@ -1,13 +1,13 @@
-package com.pqixing.aex.setting
+package com.pqixing.profm.setting
 
 import com.pqixing.XHelper
 import com.pqixing.XKeys
-import com.pqixing.aex.android.tasks.BaseTask
-import com.pqixing.aex.maven.VersionManager
-import com.pqixing.aex.model.ManifestEx
-import com.pqixing.aex.model.ProjectEx
-import com.pqixing.aex.utils.AEX
-import com.pqixing.aex.utils.GitHelper
+import com.pqixing.profm.android.tasks.BaseTask
+import com.pqixing.profm.maven.VersionManager
+import com.pqixing.profm.model.ManifestEx
+import com.pqixing.profm.model.ProjectEx
+import com.pqixing.profm.utils.AEX
+import com.pqixing.profm.utils.GitHelper
 import org.gradle.BuildAdapter
 import org.gradle.BuildResult
 import org.gradle.api.GradleException

@@ -1,6 +1,6 @@
-package com.pqixing.aex.model.define
+package com.pqixing.profm.model.define
 
-import com.pqixing.aex.model.ProjectEx
+import com.pqixing.profm.model.ProjectEx
 import com.pqixing.model.define.IConfig
 import com.pqixing.model.define.IGit
 import com.pqixing.model.define.IMaven

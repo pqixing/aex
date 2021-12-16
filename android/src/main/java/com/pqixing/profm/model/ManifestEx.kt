@@ -1,8 +1,8 @@
-package com.pqixing.aex.model
+package com.pqixing.profm.model
 
-import com.pqixing.aex.model.define.IManifestEx
-import com.pqixing.aex.setting.XSetting
-import com.pqixing.aex.utils.AEX.runClosure
+import com.pqixing.profm.model.define.IManifestEx
+import com.pqixing.profm.setting.XSetting
+import com.pqixing.profm.utils.AEX.runClosure
 import com.pqixing.base64Encode
 import com.pqixing.envValue
 import com.pqixing.model.define.IGit

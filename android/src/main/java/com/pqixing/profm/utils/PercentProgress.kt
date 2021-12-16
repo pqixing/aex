@@ -1,6 +1,6 @@
-package com.pqixing.aex.utils
+package com.pqixing.profm.utils
 
-import com.pqixing.aex.setting.XSetting
+import com.pqixing.profm.setting.XSetting
 import org.eclipse.jgit.lib.ProgressMonitor
 
 class PercentProgress @JvmOverloads constructor(val set:XSetting,val space: Float = 1500f) : ProgressMonitor {

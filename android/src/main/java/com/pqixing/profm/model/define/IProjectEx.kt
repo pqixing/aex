@@ -1,4 +1,4 @@
-package com.pqixing.aex.model.define
+package com.pqixing.profm.model.define
 
 import com.pqixing.model.impl.ModuleX
 import groovy.lang.Closure

@@ -1,6 +1,6 @@
-package com.pqixing.aex.utils
+package com.pqixing.profm.utils
 
-import com.pqixing.aex.setting.XSetting
+import com.pqixing.profm.setting.XSetting
 import groovy.lang.Closure
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -9,7 +9,7 @@ import java.lang.ref.WeakReference
 
 fun Project.setting() = AEX.cache[this.gradle.hashCode()]?.get()!!
 fun <T : Plugin<*>> Project.plugin(type: Class<T>): T? {
-    return this.setting()?.plugins?.get(this)?.find { it.javaClass == type } as? T
+    return this.setting().plugins.get(this)?.find { it.javaClass == type } as? T
 }
 
 fun Project.register(plugin: Plugin<*>) {

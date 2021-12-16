@@ -3,7 +3,7 @@
           package="com.pqixing.aex.door">
 
     <application>
-        <activity android:name="com.pqixing.aex.start.StartActivity">
+        <activity android:name="com.pqixing.profm.start.StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

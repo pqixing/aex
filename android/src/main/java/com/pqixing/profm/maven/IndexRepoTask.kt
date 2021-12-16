@@ -1,16 +1,15 @@
-package com.pqixing.aex.maven
+package com.pqixing.profm.maven
 
 import com.pqixing.XHelper
 import com.pqixing.XKeys
-import com.pqixing.aex.android.tasks.BaseTask
-import com.pqixing.aex.model.ModuleEx
-import com.pqixing.aex.utils.setting
+import com.pqixing.profm.android.tasks.BaseTask
+import com.pqixing.profm.model.ModuleEx
+import com.pqixing.profm.utils.setting
 import com.pqixing.aexEncode
 import com.pqixing.model.BrOpts
 import com.pqixing.tools.FileUtils
 import com.pqixing.tools.TextUtils
 import org.eclipse.jgit.api.ListBranchCommand
-import org.gradle.api.GradleException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.ThreadPoolExecutor

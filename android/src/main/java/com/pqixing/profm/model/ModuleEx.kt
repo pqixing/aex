@@ -1,8 +1,8 @@
-package com.pqixing.aex.model
+package com.pqixing.profm.model
 
-import com.pqixing.aex.android.DependManager
-import com.pqixing.aex.model.define.IModuleEx
-import com.pqixing.aex.utils.AEX
+import com.pqixing.profm.android.DependManager
+import com.pqixing.profm.model.define.IModuleEx
+import com.pqixing.profm.utils.AEX
 import com.pqixing.model.define.ICompile
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.model.impl.ProjectX

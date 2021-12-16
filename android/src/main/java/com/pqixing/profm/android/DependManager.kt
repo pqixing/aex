@@ -1,7 +1,7 @@
-package com.pqixing.aex.android
+package com.pqixing.profm.android
 
-import com.pqixing.aex.model.ModuleEx
-import com.pqixing.aex.setting.XSetting
+import com.pqixing.profm.model.ModuleEx
+import com.pqixing.profm.setting.XSetting
 import com.pqixing.model.define.ICompile
 import com.pqixing.tools.TextUtils
 

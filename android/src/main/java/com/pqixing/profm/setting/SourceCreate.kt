@@ -1,4 +1,4 @@
-package com.pqixing.aex.setting
+package com.pqixing.profm.setting
 
 import com.pqixing.model.impl.ManifestX
 import com.pqixing.model.impl.ModuleX

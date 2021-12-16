@@ -1,14 +1,14 @@
-package com.pqixing.aex.android
+package com.pqixing.profm.android
 
 import com.pqixing.*
-import com.pqixing.aex.android.tasks.ApkBuildResult
-import com.pqixing.aex.android.tasks.BaseTask
-import com.pqixing.aex.maven.IndexRepoTask
-import com.pqixing.aex.maven.ToMavenTask
-import com.pqixing.aex.model.ModuleEx
-import com.pqixing.aex.setting.XSetting
-import com.pqixing.aex.utils.register
-import com.pqixing.aex.utils.setting
+import com.pqixing.profm.android.tasks.ApkBuildResult
+import com.pqixing.profm.android.tasks.BaseTask
+import com.pqixing.profm.maven.IndexRepoTask
+import com.pqixing.profm.maven.ToMavenTask
+import com.pqixing.profm.model.ModuleEx
+import com.pqixing.profm.setting.XSetting
+import com.pqixing.profm.utils.register
+import com.pqixing.profm.utils.setting
 import com.pqixing.model.BrOpts
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.tools.FileUtils

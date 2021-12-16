@@ -1,8 +1,8 @@
-package com.pqixing.aex.maven
+package com.pqixing.profm.maven
 
 import com.pqixing.XHelper
 import com.pqixing.XKeys
-import com.pqixing.aex.setting.XSetting
+import com.pqixing.profm.setting.XSetting
 import com.pqixing.base64Decode
 import com.pqixing.hash
 import com.pqixing.model.BasicCredentials

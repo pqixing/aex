@@ -1,8 +1,8 @@
-package com.pqixing.aex.maven
+package com.pqixing.profm.maven
 
-import com.pqixing.aex.android.tasks.BaseTask
-import com.pqixing.aex.model.ModuleEx
-import com.pqixing.aex.utils.setting
+import com.pqixing.profm.android.tasks.BaseTask
+import com.pqixing.profm.model.ModuleEx
+import com.pqixing.profm.utils.setting
 import com.pqixing.tools.FileUtils
 import com.pqixing.tools.TextUtils
 import java.io.File

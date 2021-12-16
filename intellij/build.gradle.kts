@@ -13,8 +13,8 @@ dependencies {
 
 intellij {
     pluginName.set("aex")
-    version.set("IC-2020.1")//设定依赖的版本
-//    localPath '/Applications/StudioAP.app' //当前依赖本地版本
+    version.set("IC-2021.2.3")//设定依赖的版本
+//    localPath.set("/Applications/IntelliJ IDEA CE.app") //当前依赖本地版本
     plugins.set(listOf("android", "git4idea", "java", "gradle"))
     updateSinceUntilBuild.set(false)
 

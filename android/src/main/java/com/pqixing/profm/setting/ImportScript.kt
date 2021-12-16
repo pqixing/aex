@@ -1,12 +1,12 @@
-package com.pqixing.aex.setting
+package com.pqixing.profm.setting
 
 import com.pqixing.XKeys
-import com.pqixing.aex.android.DependManager
-import com.pqixing.aex.android.XPlugin
-import com.pqixing.aex.model.LocalEx
-import com.pqixing.aex.model.MavenEx
-import com.pqixing.aex.model.ModuleEx
-import com.pqixing.aex.model.ProjectEx
+import com.pqixing.profm.android.DependManager
+import com.pqixing.profm.android.XPlugin
+import com.pqixing.profm.model.LocalEx
+import com.pqixing.profm.model.MavenEx
+import com.pqixing.profm.model.ModuleEx
+import com.pqixing.profm.model.ProjectEx
 import com.pqixing.model.define.IMaven
 import com.pqixing.model.impl.ManifestX
 import com.pqixing.real
