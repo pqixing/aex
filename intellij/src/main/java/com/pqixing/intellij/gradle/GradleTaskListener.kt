@@ -11,7 +11,6 @@ import com.pqixing.tools.UrlUtils
 open class GradleTaskListener(
     val proxy: ExternalSystemTaskNotificationListener?,
     val project: Project,
-    val task: List<String>,
     val callBack: (r: GradleResult) -> Unit
 ) : ExternalSystemTaskNotificationListenerAdapter(proxy) {
 
@@ -20,10 +19,7 @@ open class GradleTaskListener(
 
     override fun onStart(id: ExternalSystemTaskId, workingDir: String?) {
         super.onStart(id, workingDir)
-        //尝试调起运行面板
-        if (task.isNotEmpty()) {
-            XApp.activateWindow(project, "Build")
-        }
+        XApp.activateWindow(project, "Build")
     }
 
     override fun onEnd(id: ExternalSystemTaskId) {

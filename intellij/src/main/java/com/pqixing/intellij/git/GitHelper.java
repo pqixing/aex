@@ -1,4 +1,4 @@
-package com.pqixing.intellij.uitils;
+package com.pqixing.intellij.git;
 
 import com.intellij.dvcs.DvcsUtil;
 import com.intellij.execution.process.ProcessOutputTypes;

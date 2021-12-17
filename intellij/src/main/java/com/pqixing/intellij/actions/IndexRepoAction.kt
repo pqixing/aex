@@ -14,7 +14,7 @@ import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XItem
 import com.pqixing.intellij.ui.weight.XModuleDialog
-import com.pqixing.intellij.uitils.GitHelper
+import com.pqixing.intellij.git.GitHelper
 import com.pqixing.model.BrOpts
 import java.awt.Point
 import java.io.File

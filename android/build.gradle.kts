@@ -1,4 +1,6 @@
 plugins {
+    id("kotlin")
+    id("java")
     id("java-gradle-plugin")
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.16.0"
@@ -39,4 +41,12 @@ dependencies {
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${findProperty("kotlin_version")}")
     if (isPublish) sourceSets.main.get().java.srcDir("$rootDir/common/src/main/java") else compileOnly(project(":common"))
+}
+
+tasks {
+    compileJava{
+        sourceCompatibility = JavaVersion.VERSION_11.toString()
+        targetCompatibility = JavaVersion.VERSION_11.toString()
+    }
+    compileKotlin.get().kotlinOptions.jvmTarget =JavaVersion.VERSION_11.toString()
 }

@@ -18,7 +18,7 @@ import com.pqixing.intellij.ui.adapter.XBaseAdapter
 import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.pop.showPopup
-import com.pqixing.intellij.uitils.GitHelper
+import com.pqixing.intellij.git.GitHelper
 import com.pqixing.model.impl.ManifestX
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.model.impl.ProjectX

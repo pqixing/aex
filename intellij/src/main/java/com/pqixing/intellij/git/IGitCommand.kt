@@ -1,10 +1,10 @@
-package com.pqixing.intellij.actions
+package com.pqixing.intellij.git
 
 import com.intellij.openapi.ui.Messages
 import com.jetbrains.rd.util.string.printToString
 import com.pqixing.intellij.XApp
+import com.pqixing.intellij.actions.XGitDialog
 import com.pqixing.intellij.ui.weight.XItem
-import com.pqixing.intellij.uitils.GitHelper
 import com.pqixing.model.impl.ProjectX
 import git4idea.GitUtil
 import git4idea.commands.GitCommand

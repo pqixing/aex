@@ -13,13 +13,13 @@ import com.pqixing.intellij.XApp.getSpList
 import com.pqixing.intellij.XApp.putSp
 import com.pqixing.intellij.XApp.putSpList
 import com.pqixing.intellij.common.XEventAction
+import com.pqixing.intellij.git.*
 import com.pqixing.intellij.ui.autoComplete
 import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XItem
 import com.pqixing.intellij.ui.weight.XModuleDialog
 import com.pqixing.intellij.ui.weight.addMouseClick
-import com.pqixing.intellij.uitils.GitHelper
 import com.pqixing.model.impl.ProjectX
 import git4idea.GitUtil
 import git4idea.commands.GitCommand

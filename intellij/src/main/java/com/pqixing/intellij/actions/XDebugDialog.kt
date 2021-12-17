@@ -6,16 +6,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import com.intellij.ui.SearchTextField
 import com.intellij.ui.TextFieldWithAutoCompletion
-import com.intellij.ui.awt.RelativePoint
 import com.pqixing.intellij.XApp
 import com.pqixing.intellij.XApp.getOrElse
 import com.pqixing.intellij.XApp.getSp
 import com.pqixing.intellij.XApp.putSp
-import com.pqixing.intellij.gradle.GradleExecute
-import com.pqixing.intellij.ui.pop.PopOption
-import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XEventDialog
-import java.awt.Point
 import javax.swing.*
 
 class XDebugDialog(e: AnActionEvent) : XEventDialog(e) {
@@ -40,10 +35,6 @@ class XDebugDialog(e: AnActionEvent) : XEventDialog(e) {
         }
 
         private fun showDebugPop(project: Project, e: AnActionEvent, c: SearchTextField) {
-            val optins = listOf(
-                PopOption("", "GradleTaskOption", "show option when start gradle task", GradleExecute.option) { GradleExecute.option = it },
-            )
-            XListPopupImpl(project, "title", optins).show(RelativePoint(c, Point(180 - c.x, 23)))
         }
     }
 

@@ -1,6 +1,7 @@
 package com.pqixing.intellij.gradle
 
 import com.intellij.openapi.project.Project
+import com.pqixing.intellij.compat.AndroidCompat
 
 data class GradleRequest(
     val tasks: List<String>,
@@ -22,7 +23,7 @@ data class GradleRequest(
 
 
     fun executeTasks(project: Project, callBack: (r: GradleResult) -> Unit) {
-        GradleExecute.execute(project, this, callBack)
+        AndroidCompat.runGradleTask(project,this,callBack)
     }
 }
 

@@ -6,7 +6,7 @@ import com.pqixing.intellij.XApp
 import com.pqixing.intellij.ui.weight.XEventDialog
 import java.lang.reflect.ParameterizedType
 
-abstract class XEventAction<T : XEventDialog> : XAnAction() {
+abstract class XEventAction<T : XEventDialog> : XAction() {
     override fun actionPerformed(e: AnActionEvent) {
         ((javaClass.genericSuperclass as? ParameterizedType)?.actualTypeArguments?.firstOrNull() as? Class<XEventDialog>)?.getConstructor(
             AnActionEvent::class.java
@@ -14,7 +14,7 @@ abstract class XEventAction<T : XEventDialog> : XAnAction() {
     }
 }
 
-abstract class XAnAction : AnAction() {
+abstract class XAction : AnAction() {
     override fun update(e: AnActionEvent) {
         e.presentation.isVisible = XApp.isExProject(e.project, false)
     }

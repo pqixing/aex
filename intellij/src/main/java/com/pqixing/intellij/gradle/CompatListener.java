@@ -18,22 +18,23 @@ import com.intellij.openapi.externalSystem.service.execution.ExternalSystemEvent
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import static com.intellij.openapi.externalSystem.util.ExternalSystemUtil.convert;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class GradleCompatListener extends ExternalSystemTaskNotificationListenerAdapter {
+public class CompatListener extends ExternalSystemTaskNotificationListenerAdapter {
 
     private String executionName;
     private BuildEventDispatcher myBuildEventDispatcher;
     private BuildViewManager buildViewManager;
 
-    private GradleCompatListener() {
+    public CompatListener() {
 
     }
 
-    private GradleCompatListener(Project myProject, ExternalSystemTaskId myTaskId, String executionName) {
+    public CompatListener(Project myProject, ExternalSystemTaskId myTaskId, String executionName) {
         this.executionName = executionName;
 
         buildViewManager = ServiceManager.getService(myProject, BuildViewManager.class);
@@ -113,14 +114,5 @@ public class GradleCompatListener extends ExternalSystemTaskNotificationListener
         FinishBuildEventImpl event = new FinishBuildEventImpl(id, null, System.currentTimeMillis(), "cancelled", new SkippedResultImpl());
         myBuildEventDispatcher.onEvent(id, event);
         myBuildEventDispatcher.close();
-    }
-
-
-    public static ExternalSystemTaskNotificationListener createTaskListener(Project myProject, ExternalSystemTaskId myTaskId, String executionName) {
-        try {
-            return new GradleCompatListener(myProject, myTaskId, executionName);
-        } catch (Exception exception) {
-            return null;
-        }
     }
 }

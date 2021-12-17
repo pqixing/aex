@@ -14,7 +14,7 @@ import com.pqixing.intellij.XApp
 import com.pqixing.intellij.common.XEventAction
 import com.pqixing.intellij.ui.autoComplete
 import com.pqixing.intellij.ui.weight.XEventDialog
-import com.pqixing.intellij.uitils.GitHelper
+import com.pqixing.intellij.git.GitHelper
 import com.pqixing.tools.FileUtils
 import java.awt.Desktop
 import java.awt.Rectangle

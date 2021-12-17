@@ -22,8 +22,8 @@ import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XItem
 import com.pqixing.intellij.ui.weight.XModuleDialog
-import com.pqixing.intellij.uitils.UiUtils
-import com.pqixing.intellij.uitils.UiUtils.realName
+import com.pqixing.intellij.common.UiUtils
+import com.pqixing.intellij.common.UiUtils.realName
 import com.pqixing.model.impl.ModuleX
 import git4idea.repo.GitRepository
 import java.awt.Point
@@ -76,7 +76,7 @@ class XBuilderAction : XEventAction<XBuilderDialog>() {
             if (!success) {
                 XApp.notify(project, "Build Fail", result ?: "", type = NotificationType.WARNING)
             } else if (result?.endsWith(".apk") == true) XApp.invoke {
-                UiUtils.tryInstall(project, null, result, param.install)
+                UiUtils.tryInstall(project, result, param.install)
             }
             param.building = false
             finish(success, result)
@@ -107,7 +107,7 @@ class XBuilderDialog(val action: XBuilderAction, e: AnActionEvent) : XModuleDial
         UiUtils.setTransfer(center) { files ->
             val apk = files.find { it.exists() && it.name.endsWith(".apk") }
             if (apk != null && Messages.showOkCancelDialog(project, "$apk", "Install", "Yes", "No", null) == Messages.OK) {
-                UiUtils.tryInstall(project, null, "", paramHelper.install)
+                UiUtils.tryInstall(project, "", paramHelper.install)
             }
         }
     }

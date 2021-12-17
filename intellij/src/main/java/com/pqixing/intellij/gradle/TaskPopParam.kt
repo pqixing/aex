@@ -7,7 +7,7 @@ import com.pqixing.intellij.XApp.getSp
 import com.pqixing.intellij.XApp.putSp
 import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.weight.XDialog
-import com.pqixing.intellij.uitils.UiUtils.realName
+import com.pqixing.intellij.common.UiUtils.realName
 
 class TaskPopParam(val key: String, val project: Project, val dialog: XDialog) {
 

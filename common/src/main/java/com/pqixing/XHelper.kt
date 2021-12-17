@@ -16,6 +16,7 @@ import org.xml.sax.helpers.DefaultHandler
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.InputStream
+import java.lang.reflect.Method
 import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
@@ -45,7 +46,56 @@ fun String.base64Encode(replace: Boolean = true) =
 fun String.base64Decode() =
     String(Base64.getDecoder().decode(this.toByteArray(Charsets.UTF_8)), Charsets.UTF_8)
 
-fun String.pure() = TextUtils.numOrLetter(this).toLowerCase(Locale.CHINA)
+fun String.pure() = TextUtils.numOrLetter(this).lowercase(Locale.CHINA)
+
+fun Any.invokeMethod(name: String, params: Array<Any> = emptyArray(), types: Array<out Class<*>> = params.map { it.javaClass }.toTypedArray()): Any {
+    val clazz = if (this is Class<*>) this else this.javaClass
+    val obj = if (this is Class<*>) null else this
+
+    val method = clazz.declaredMethods.find { it.name == name && it.parameterCount == params.size && arrayContentsEq(it.parameterTypes, types) }
+        ?: clazz.methods.find { it.name == name && it.parameterCount == params.size && arrayContentsEq(it.parameterTypes, types) }
+
+    if(method == null){
+       val str1 = clazz.declaredMethods.filter { it.name == name }?.joinToString { it.toGenericString() }
+       val str2 = clazz.methods.filter { it.name == name }?.joinToString { it.toGenericString() }
+        throw RuntimeException("invokeMethod ${clazz}.$name ( ${types.joinToString { it.name }} ) \n $str1 \n $str2")
+    }
+    return when (types.size) {
+        0 -> method.access().invoke(obj)
+        1 -> method.access().invoke(obj, params[0])
+        2 -> method.access().invoke(obj, params[0], params[1])
+        3 -> method.access().invoke(obj, params[0], params[1], params[2])
+        4 -> method.access().invoke(obj, params[0], params[1], params[2], params[3])
+        5 -> method.access().invoke(obj, params[0], params[1], params[2], params[3], params[4])
+        else -> this
+    }
+}
+
+//
+// Other helpers and base implementation
+//
+private fun arrayContentsEq(a1: Array<out Any>?, a2: Array<out Any>?): Boolean {
+    if (a1 == null) {
+        return a2 == null || a2.isEmpty()
+    }
+    if (a2 == null) {
+        return a1.size == 0
+    }
+    if (a1.size != a2.size) {
+        return false
+    }
+    for (i in a1.indices) {
+        if (a1[i] !== a2[i]) {
+            return false
+        }
+    }
+    return true
+}
+
+fun Method.access(): Method {
+    this.isAccessible = true
+    return this
+}
 
 object XHelper {
     val executors: ScheduledExecutorService by lazy { Executors.newScheduledThreadPool(1) }
@@ -279,6 +329,8 @@ object XHelper {
         }
         return cacheFile.length() > repoMetaFile.length()
     }
+
+
 }
 
 class TopNode(var name: String) {

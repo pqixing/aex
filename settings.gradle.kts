@@ -1,5 +1,7 @@
 include(":android",":intellij",":common")
 
+//include(":intellij_lib")
+
 pluginManagement {
     repositories {
         maven {

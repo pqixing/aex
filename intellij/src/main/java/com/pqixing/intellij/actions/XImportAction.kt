@@ -1,7 +1,5 @@
 package com.pqixing.intellij.actions
 
-import com.android.tools.idea.IdeInfo
-import com.android.tools.idea.gradle.project.GradleProjectInfo
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -22,13 +20,14 @@ import com.pqixing.intellij.XApp.putSp
 import com.pqixing.intellij.XApp.putSpList
 import com.pqixing.intellij.XNotifyAction
 import com.pqixing.intellij.common.XEventAction
+import com.pqixing.intellij.compat.AndroidCompat
 import com.pqixing.intellij.gradle.GradleRequest
 import com.pqixing.intellij.ui.pop.PopOption
 import com.pqixing.intellij.ui.pop.XListPopupImpl
 import com.pqixing.intellij.ui.weight.XItem
 import com.pqixing.intellij.ui.weight.XModuleDialog
-import com.pqixing.intellij.uitils.GitHelper
-import com.pqixing.intellij.uitils.UiUtils
+import com.pqixing.intellij.git.GitHelper
+import com.pqixing.intellij.common.UiUtils
 import com.pqixing.model.impl.ManifestX
 import com.pqixing.model.impl.ModuleX
 import com.pqixing.tools.FileUtils
@@ -200,7 +199,7 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
         indictor.text = "Start Sync Code"
         //如果快速导入不成功,则,同步一次
         //ActionManager.getInstance().getAction("ExternalSystem.RefreshAllProjects").actionPerformed(e)
-        val syncAction = if (isGradle(e)) "Android.SyncProject" else "ExternalSystem.RefreshAllProjects"
+        val syncAction = if (AndroidCompat.isGradleProject(project)) "Android.SyncProject" else "ExternalSystem.RefreshAllProjects"
         XApp.invoke { ActionManager.getInstance().getAction(syncAction).actionPerformed(e) }
     }
 
@@ -277,13 +276,6 @@ class XImportDialog(e: AnActionEvent) : XModuleDialog(e) {
             }
         )
     }
-
-
-    private fun isGradle(e: AnActionEvent): Boolean = kotlin.runCatching {
-        val project = e.project ?: return false
-        val info = GradleProjectInfo.getInstance(project)
-        return info.isBuildWithGradle && (info.androidModules.isNotEmpty() || IdeInfo.getInstance().isAndroidStudio)
-    }.getOrDefault(false)
 }
 
 
