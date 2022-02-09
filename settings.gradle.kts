@@ -1,6 +1,6 @@
 include(":android",":intellij",":common")
 
-//include(":intellij_lib")
+include(":intellij:libs")
 
 pluginManagement {
     repositories {

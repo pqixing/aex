@@ -6,7 +6,7 @@ plugins {
 val sourceType = "bumblebee"
 
 //兼容措施
-val dirs = mapOf("bumblebee" to "/Applications/StudioBeta.app/Contents")
+val dirs = mapOf("bumblebee" to "/Applications/Studio.app/Contents")
 val dir = dirs[sourceType]
 
 sourceSets.main {
@@ -20,7 +20,7 @@ tasks {
     }
     compileKotlin.get().kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
     jar.get().doLast {
-        File(buildDir, "libs/${project.name}.jar").copyTo(File(rootDir, "intellij/libs/${sourceType}.jar"), true)
+        File(buildDir, "libs/${project.name}.jar").copyTo(File(projectDir, "${sourceType}.jar"), true)
     }
 }
 
