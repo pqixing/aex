@@ -1,6 +1,6 @@
-include(":android",":intellij",":common")
+include(":core",":gui",":model",":core:mock")
 
-include(":intellij:libs")
+//include(":gui:libs")
 
 pluginManagement {
     repositories {

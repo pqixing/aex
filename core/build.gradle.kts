@@ -21,6 +21,13 @@ gradlePlugin {
             description = "Manage framework for multi projects,fast to handle git control and maven support!"
             implementationClass = "com.pqixing.profm.setting.XSetting"
         }
+        create("apx2") {
+            id = "io.github.pqixing.profm2"
+            displayName = "io.github.pqixing.profm2"
+            description = "Manage framework for multi projects,fast to handle git control and maven support!"
+            implementationClass = "com.pqixing.profm.setting.XSetting"
+        }
+
     }
 }
 publishing {
@@ -40,7 +47,7 @@ dependencies {
     implementation("com.alibaba:fastjson:1.2.78")
     implementation("org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${findProperty("kotlin_version")}")
-    if (isPublish) sourceSets.main.get().java.srcDir("$rootDir/common/src/main/java") else compileOnly(project(":common"))
+    if (isPublish) sourceSets.main.get().java.srcDir("$rootDir/model/src/main/java") else compileOnly(project(":model"))
 }
 
 tasks {

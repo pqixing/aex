@@ -8,7 +8,7 @@ plugins {
 dependencies {
     api("com.alibaba:fastjson:1.2.78")
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk7:${findProperty("kotlin_version")}")
-    api(project(":common"))
+    api(project(":model"))
     runtimeOnly(fileTree("dir" to "$projectDir/libs", "include" to arrayOf("*.jar")))
 
 }

@@ -1,4 +1,4 @@
-package com.pqixing.aex.start
+package com.pqixing.mock
 
 import android.app.Activity
 import android.app.AlertDialog
@@ -13,7 +13,6 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import com.pqixing.aex.door.R
-import com.pqixing.aex.start.StartAdapter
 import java.lang.reflect.Method
 import java.util.*
 
